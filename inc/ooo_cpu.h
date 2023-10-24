@@ -47,6 +47,13 @@ public:
   const std::size_t dib_set, dib_way, dib_window;
   dib_t DIB{dib_set * dib_way};
 
+  // PTQ and que for recently prefetched
+  #define MAX_PQ_ENTRIES 64 // Same length as IFETCH_BUFFER. TODO: Find ideal length and arguments for it
+  #define MAX_RECENTLY_PREFETCHED_ENTRIES 5 //TODO: Find ideal length
+
+  std::deque<uint64_t> PTQ;
+  std::deque<uint64_t> recently_prefetched;
+
   // reorder buffer, load/store queue, register file
   champsim::circular_buffer<ooo_model_instr> IFETCH_BUFFER;
   champsim::delay_queue<ooo_model_instr> DISPATCH_BUFFER;
@@ -82,11 +89,14 @@ public:
   uint64_t branch_type_misses[8] = {};
 
   CacheBus ITLB_bus, DTLB_bus, L1I_bus, L1D_bus;
+  CACHE* l1i;
 
   void operate();
 
   // functions
   void init_instruction(ooo_model_instr instr);
+  // PTQ
+  void fill_prefetch_queue(ooo_model_instr& instr);
   void check_dib();
   void translate_fetch();
   void fetch_instruction();

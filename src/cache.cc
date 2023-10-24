@@ -178,6 +178,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   handle_pkt.data = hit_block.data;
 
   // update prefetcher on load instruction
+  // Qs: What is meant by metadata?
+  // Qs: I do not understand how impl_prefetcher_cache_operate relates to the function in the prefetcher files.
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
     cpu = handle_pkt.cpu;
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);

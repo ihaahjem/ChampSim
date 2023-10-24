@@ -4,7 +4,8 @@
     "page_size": 4096,
     "heartbeat_frequency": 10000000,
     "num_cores": 1,
-
+    "CFLAGS": "-Wall -g -O0 -DDEBUG",
+    "CXXFLAGS": "-Wall -g -O0 -DDEBUG",
     "ooo_cpu": [
         {
             "frequency": 4000,
@@ -51,7 +52,7 @@
         "prefetch_as_load": false,
         "virtual_prefetch": true,
         "prefetch_activate": "LOAD,PREFETCH",
-        "prefetcher": "no_instr"
+        "prefetcher": "fdip"
     },
 
     "L1D": {

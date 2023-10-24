@@ -7,6 +7,7 @@
 #include "champsim.h"
 #include "instruction.h"
 
+
 #define DEADLOCK_CYCLE 1000000
 
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -44,8 +45,10 @@ void O3_CPU::initialize_core()
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 {
+
   instrs_to_read_this_cycle--;
 
+  // NOTE: instr_unique_id is incremented for each instruction ensuring that each one has a unique value.
   arch_instr.instr_id = instr_unique_id;
 
   bool reads_sp = false;
@@ -76,7 +79,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
        arch_instr.destination_registers[i] = 0;
        }
        */
-
     if (arch_instr.destination_registers[i])
       arch_instr.num_reg_ops++;
     if (arch_instr.destination_memory[i]) {
@@ -205,7 +207,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     });
 
     num_branch++;
-
+  
     std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(arch_instr.ip, arch_instr.branch_type);
     uint64_t predicted_branch_target = btb_result.first;
     uint8_t always_taken = btb_result.second;
@@ -215,8 +217,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
 
     // call code prefetcher every time the branch predictor is used
-    impl_prefetcher_branch_operate(arch_instr.ip, arch_instr.branch_type, predicted_branch_target);
+    // impl_prefetcher_branch_operate(arch_instr.ip, arch_instr.branch_type, predicted_branch_target);
 
+    // and know from the start if it is a misprediction or not.
+    // Not sure If I understand what happens on a misprediction here.
+    // If I want to simulate that an ftq was not flushed on mispredict, I would just not let it
+    // get affected of this?
     if (predicted_branch_target != arch_instr.branch_target) {
       branch_mispredictions++;
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
@@ -254,9 +260,13 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
-
+  
+  // Add to prefetch_queue
+  fill_prefetch_queue(arch_instr);
+ 
   instr_unique_id++;
 }
+
 
 void O3_CPU::check_dib()
 {
@@ -292,9 +302,10 @@ void O3_CPU::do_check_dib(ooo_model_instr& instr)
 
 void O3_CPU::translate_fetch()
 {
-  if (IFETCH_BUFFER.empty())
+  if (IFETCH_BUFFER.empty()){
     return;
-
+  }
+  
   // scan through IFETCH_BUFFER to find instructions that need to be translated
   auto itlb_req_begin = std::find_if(IFETCH_BUFFER.begin(), IFETCH_BUFFER.end(), [](const ooo_model_instr& x) { return !x.translated; });
   uint64_t find_addr = itlb_req_begin->ip;
@@ -358,6 +369,25 @@ void O3_CPU::fetch_instruction()
     do_fetch_instruction(l1i_req_begin, l1i_req_end);
   }
 }
+
+void O3_CPU::fill_prefetch_queue(ooo_model_instr& instr){
+  // Get block address of instruction from branch predictor
+  uint64_t block_address = ((instr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+
+  // Add block to the prefetch queue if it is not already there and not recently prefetched
+  std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+  if(it0 == recently_prefetched.end()){
+    std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
+    if (it1 == PTQ.end()) {
+      PTQ.push_back(block_address);
+    }
+  }
+
+  if(PTQ.size() >= MAX_PQ_ENTRIES){
+    PTQ.pop_front();
+  }
+}
+
 
 void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::iterator begin, champsim::circular_buffer<ooo_model_instr>::iterator end)
 {
@@ -483,7 +513,7 @@ void O3_CPU::dispatch_instruction()
     throw champsim::deadlock{cpu};
 }
 
-int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(0, pf_v_addr, pf_v_addr, true, 0); }
+int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(pf_v_addr,true, 0); }
 
 void O3_CPU::schedule_instruction()
 {
@@ -1058,7 +1088,7 @@ void O3_CPU::handle_memory_return()
     --to_read;
   }
 
-  to_read = static_cast<CACHE*>(L1D_bus.lower_level)->MAX_READ;
+  to_read = (static_cast<CACHE*>(L1D_bus.lower_level))->MAX_READ;
   while (to_read > 0 && !L1D_bus.PROCESSED.empty()) { // L1D
     PACKET& l1d_entry = L1D_bus.PROCESSED.front();
 
