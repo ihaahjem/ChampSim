@@ -61,15 +61,17 @@ void O3_CPU::prefetcher_cycle_operate() {
         }
       }
 
+      if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+        recently_prefetched.pop_front();
+      }
+      
       if(!in_cache){
           prefetch_code_line(PTQ.front());
           recently_prefetched.push_back(PTQ.front());
           PTQ.pop_front();
       }
 
-      if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
-        recently_prefetched.pop_front();
-      }
+
     }
  
 

@@ -13,6 +13,8 @@
 extern uint8_t warmup_complete[NUM_CPUS];
 extern uint8_t MAX_INSTR_DESTINATIONS;
 
+uint64_t mispredicts_in_row = 0;
+
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
@@ -34,6 +36,8 @@ void O3_CPU::operate()
 
   DISPATCH_BUFFER.operate();
   DECODE_BUFFER.operate();
+
+  prefetch_past_mispredict();
 }
 
 void O3_CPU::initialize_core()
@@ -231,8 +235,14 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
+        
+        btb_input = std::make_pair(arch_instr.ip, arch_instr.branch_type);
       }
     } else {
+      if(mispredicts_in_row){
+        cout << "Number of mispredicts before correct: " << mispredicts_in_row << endl;
+        mispredicts_in_row = 0;
+      }
       // if correctly predicted taken, then we can't fetch anymore instructions
       // this cycle
       if (arch_instr.branch_taken == 1) {
@@ -262,10 +272,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   IFETCH_BUFFER.push_back(arch_instr);
   
   // Add to prefetch_queue
-  fill_prefetch_queue(arch_instr);
+  fill_prefetch_queue(arch_instr.ip);
  
   instr_unique_id++;
 }
+
+
 
 
 void O3_CPU::check_dib()
@@ -370,9 +382,9 @@ void O3_CPU::fetch_instruction()
   }
 }
 
-void O3_CPU::fill_prefetch_queue(ooo_model_instr& instr){
+void O3_CPU::fill_prefetch_queue(uint64_t ip){
   // Get block address of instruction from branch predictor
-  uint64_t block_address = ((instr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+  uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
   // Add block to the prefetch queue if it is not already there and not recently prefetched
   std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
@@ -385,6 +397,24 @@ void O3_CPU::fill_prefetch_queue(ooo_model_instr& instr){
 
   if(PTQ.size() >= MAX_PQ_ENTRIES){
     PTQ.pop_front();
+  }
+}
+
+void O3_CPU::prefetch_past_mispredict(){
+  if(instrs_to_read_this_cycle == 0 && fetch_stall == 1){
+    // when the misprediction occurs, add that instruction to this function. Then continue to run this function while the if statement holds
+    // the instruction that is sent in is updated each cycle.
+    // Step 0: btb_instr = instr for misprediction
+    // Step 1: btb_instr = return instruction from impl_btb_prediction
+    // Step ... continues until if statement no longer holds
+    if(btb_input.first && btb_input.second){
+      btb_input = impl_btb_prediction(btb_input.first, btb_input.second);
+      fill_prefetch_queue(btb_input.first);
+      mispredicts_in_row++;
+    }
+
+
+    // 
   }
 }
 

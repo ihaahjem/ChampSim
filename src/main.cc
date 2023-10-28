@@ -423,6 +423,7 @@ int main(int argc, char** argv)
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
+      
 
       // heartbeat information
       if (show_heartbeat && (ooo_cpu[i]->num_retired >= ooo_cpu[i]->next_print_instruction)) {
