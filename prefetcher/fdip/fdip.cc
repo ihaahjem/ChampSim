@@ -52,6 +52,7 @@ void O3_CPU::prefetcher_cycle_operate() {
       uint64_t num_tag_bits = 64 - lg2(L1I->NUM_SET) - LOG2_BLOCK_SIZE;
       uint64_t tag = PTQ.front() >> (lg2(L1I->NUM_SET) + LOG2_BLOCK_SIZE);
       uint64_t index = (PTQ.front() << num_tag_bits) >> (num_tag_bits + LOG2_BLOCK_SIZE);
+      uint64_t num_ways = L1I->NUM_WAY;
 
       // Loop through the way and compare the tag
       bool in_cache = false;

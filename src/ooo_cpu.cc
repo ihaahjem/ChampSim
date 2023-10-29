@@ -262,7 +262,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   IFETCH_BUFFER.push_back(arch_instr);
   
   // Add to prefetch_queue
-  fill_prefetch_queue(arch_instr);
+  fill_prefetch_queue(arch_instr.ip);
  
   instr_unique_id++;
 }
@@ -370,9 +370,9 @@ void O3_CPU::fetch_instruction()
   }
 }
 
-void O3_CPU::fill_prefetch_queue(ooo_model_instr& instr){
+void O3_CPU::fill_prefetch_queue(uint64_t ip){
   // Get block address of instruction from branch predictor
-  uint64_t block_address = ((instr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+  uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
   // Add block to the prefetch queue if it is not already there and not recently prefetched
   std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);

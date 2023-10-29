@@ -96,7 +96,7 @@ public:
   // functions
   void init_instruction(ooo_model_instr instr);
   // PTQ
-  void fill_prefetch_queue(ooo_model_instr& instr);
+  void fill_prefetch_queue(uint64_t ip);
   void check_dib();
   void translate_fetch();
   void fetch_instruction();
