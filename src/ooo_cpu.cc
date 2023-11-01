@@ -13,7 +13,7 @@
 extern uint8_t warmup_complete[NUM_CPUS];
 extern uint8_t MAX_INSTR_DESTINATIONS;
 
-uint64_t mispredicts_in_row = 0;
+// uint64_t instrs_to_speculate_this_cycle = 0;
 
 void O3_CPU::operate()
 {
@@ -37,7 +37,7 @@ void O3_CPU::operate()
   DISPATCH_BUFFER.operate();
   DECODE_BUFFER.operate();
 
-  prefetch_past_mispredict();
+  
 }
 
 void O3_CPU::initialize_core()
@@ -232,22 +232,22 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
+        btb_input = std::make_pair(arch_instr.ip, arch_instr.branch_type);
+        instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+        
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
         
-        btb_input = std::make_pair(arch_instr.ip, arch_instr.branch_type);
+        
       }
     } else {
-      if(mispredicts_in_row){
-        cout << "Number of mispredicts before correct: " << mispredicts_in_row << endl;
-        mispredicts_in_row = 0;
-      }
       // if correctly predicted taken, then we can't fetch anymore instructions
       // this cycle
       if (arch_instr.branch_taken == 1) {
         instrs_to_read_this_cycle = 0;
       }
+      // instrs_to_speculate_this_cycle = 0;
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -273,11 +273,44 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
+  
+  // prefetch_past_mispredict();
+
  
   instr_unique_id++;
 }
 
+void O3_CPU::fill_prefetch_queue(uint64_t ip){
+  // Get block address of instruction from branch predictor
+  uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
+  // Add block to the prefetch queue if it is not already there and not recently prefetched
+  std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+  if(it0 == recently_prefetched.end()){
+    std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
+    if (it1 == PTQ.end()) {
+      PTQ.push_back(block_address);
+    }
+  }
+
+  if(PTQ.size() >= MAX_PQ_ENTRIES){
+    PTQ.pop_front();
+  }
+}
+
+void O3_CPU::prefetch_past_mispredict(){
+
+  std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
+  // if(btb_result.first == 0){
+  //   btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
+  // }
+  
+  btb_input = btb_result;
+  fill_prefetch_queue(btb_input.first);
+
+  instrs_to_speculate_this_cycle--;
+
+}
 
 
 void O3_CPU::check_dib()
@@ -382,42 +415,6 @@ void O3_CPU::fetch_instruction()
   }
 }
 
-void O3_CPU::fill_prefetch_queue(uint64_t ip){
-  // Get block address of instruction from branch predictor
-  uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
-
-  // Add block to the prefetch queue if it is not already there and not recently prefetched
-  std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-  if(it0 == recently_prefetched.end()){
-    std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
-    if (it1 == PTQ.end()) {
-      PTQ.push_back(block_address);
-    }
-  }
-
-  if(PTQ.size() >= MAX_PQ_ENTRIES){
-    PTQ.pop_front();
-  }
-}
-
-void O3_CPU::prefetch_past_mispredict(){
-  if(instrs_to_read_this_cycle == 0 && fetch_stall == 1){
-    // when the misprediction occurs, add that instruction to this function. Then continue to run this function while the if statement holds
-    // the instruction that is sent in is updated each cycle.
-    // Step 0: btb_instr = instr for misprediction
-    // Step 1: btb_instr = return instruction from impl_btb_prediction
-    // Step ... continues until if statement no longer holds
-    if(btb_input.first && btb_input.second){
-      btb_input = impl_btb_prediction(btb_input.first, btb_input.second);
-      fill_prefetch_queue(btb_input.first);
-      mispredicts_in_row++;
-    }
-
-
-    // 
-  }
-}
-
 
 void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::iterator begin, champsim::circular_buffer<ooo_model_instr>::iterator end)
 {
@@ -493,7 +490,7 @@ void O3_CPU::decode_instruction()
       DISPATCH_BUFFER.push_back(db_entry);
     else
       DISPATCH_BUFFER.push_back_ready(db_entry);
-    DECODE_BUFFER.pop_front();
+      DECODE_BUFFER.pop_front();
 
     available_decode_bandwidth--;
   }

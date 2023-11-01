@@ -423,7 +423,17 @@ int main(int argc, char** argv)
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
-      
+
+      // Fill prefetch queue speculatively when fetching is stalled
+      if(ooo_cpu[i]->instrs_to_speculate_this_cycle == 0){
+        ooo_cpu[i]->instrs_to_speculate_this_cycle = ooo_cpu[i]->FETCH_WIDTH;
+      }
+      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
+        ooo_cpu[i]->prefetch_past_mispredict();
+      }
+
+
+
 
       // heartbeat information
       if (show_heartbeat && (ooo_cpu[i]->num_retired >= ooo_cpu[i]->next_print_instruction)) {

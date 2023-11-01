@@ -33,6 +33,7 @@ void O3_CPU::prefetcher_branch_operate(uint64_t instr_ip, uint8_t branch_type, u
 uint32_t O3_CPU::prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, uint8_t prefetch_hit, uint32_t metadata_in)
 {
   // Not sure if anything should be done in this function for my implementation
+  return metadata_in;
 }
 
 uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
@@ -54,27 +55,18 @@ void O3_CPU::prefetcher_cycle_operate() {
       uint64_t index = (PTQ.front() << num_tag_bits) >> (num_tag_bits + LOG2_BLOCK_SIZE);
 
       // Loop through the way and compare the tag
-      bool in_cache = false;
-      for(auto it = L1I->block.begin() + index; it != (L1I->block.begin() + index + L1I->NUM_WAY); ++it){
-        if(it->tag == tag){
-          in_cache = true;
-        }
+      auto begin = L1I->block.begin() + index*L1I->NUM_WAY;
+      std::vector<BLOCK>::iterator it1 = std::find_if(begin, begin + L1I->NUM_WAY, [tag](const BLOCK block){ return block.tag == tag; });
+      if(it1 == begin + L1I->NUM_WAY){
+          L1I->prefetch_line(PTQ.front(),true, 0);
+          recently_prefetched.push_back(PTQ.front());
+          
       }
-
+      PTQ.pop_front();
       if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
         recently_prefetched.pop_front();
       }
-      
-      if(!in_cache){
-          prefetch_code_line(PTQ.front());
-          recently_prefetched.push_back(PTQ.front());
-          PTQ.pop_front();
-      }
-
-
     }
- 
-
   }
 }
 

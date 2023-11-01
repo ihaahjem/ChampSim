@@ -49,7 +49,8 @@ public:
 
   // PTQ and que for recently prefetched
   #define MAX_PQ_ENTRIES 64 // Same length as IFETCH_BUFFER. TODO: Find ideal length and arguments for it
-  #define MAX_RECENTLY_PREFETCHED_ENTRIES 5 //TODO: Find ideal length
+  #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
+  uint64_t instrs_to_speculate_this_cycle = 0;
   std::pair<uint64_t, uint8_t> btb_input;
 
   std::deque<uint64_t> PTQ;
