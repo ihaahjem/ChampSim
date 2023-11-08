@@ -232,12 +232,18 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        btb_input = std::make_pair(arch_instr.ip, arch_instr.branch_type);
+        btb_input = std::make_pair(arch_instr.branch_target, arch_instr.branch_type);
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+
+        // Number of available spots in IFETCH_BUFFER. At beginning this is equal to 64 or size of ifetch_buffer
+        num_ftq_entries_prefetch = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
         
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
+
+        // Set a variable "speculate_prefetch" to true
+
         
         
       }
@@ -247,7 +253,15 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       if (arch_instr.branch_taken == 1) {
         instrs_to_read_this_cycle = 0;
       }
-      // instrs_to_speculate_this_cycle = 0;
+      instrs_to_speculate_this_cycle = 0;
+
+      if(has_speculated){
+        PTQ.clear();
+        has_speculated = 0;
+      }
+
+      // if speculate_prefetch
+      //  empty prefetch_queue
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -300,15 +314,17 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
 void O3_CPU::prefetch_past_mispredict(){
 
+
   std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
-  // if(btb_result.first == 0){
-  //   btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
-  // }
+  if(btb_result.first == 0 && btb_input.first != 0){
+    btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
+  }
   
   btb_input = btb_result;
-  fill_prefetch_queue(btb_input.first);
+  fill_prefetch_queue(btb_result.first);
 
   instrs_to_speculate_this_cycle--;
+  num_ftq_entries_prefetch--;
 
 }
 

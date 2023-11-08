@@ -426,10 +426,19 @@ int main(int argc, char** argv)
 
       // Fill prefetch queue speculatively when fetching is stalled
       if(ooo_cpu[i]->instrs_to_speculate_this_cycle == 0){
-        ooo_cpu[i]->instrs_to_speculate_this_cycle = ooo_cpu[i]->FETCH_WIDTH;
+        // Set counter num_possible_prefetch to number of available spots in FTQ
+        // set ooo_cpu[i]->instrs_to_speculate_this_cycle to same as above
+        // Everytime an entry is filled, increase this counter
+        // stop filling prefetch queue when it is full. 
+        // Questions: it should not be decremented when a prefetch is performed or on clock 
+        //            cycles where a fetch would have happened?
+        
+        ooo_cpu[i]->instrs_to_speculate_this_cycle = std::min<std::size_t>(ooo_cpu[i]->FETCH_WIDTH, ooo_cpu[i]->num_ftq_entries_prefetch); 
       }
-      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
+
+      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_ftq_entries_prefetch > 0){
         ooo_cpu[i]->prefetch_past_mispredict();
+        ooo_cpu[i]->has_speculated = 1;
       }
 
 
