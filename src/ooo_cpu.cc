@@ -223,10 +223,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     // call code prefetcher every time the branch predictor is used
     // impl_prefetcher_branch_operate(arch_instr.ip, arch_instr.branch_type, predicted_branch_target);
 
-    // and know from the start if it is a misprediction or not.
-    // Not sure If I understand what happens on a misprediction here.
-    // If I want to simulate that an ftq was not flushed on mispredict, I would just not let it
-    // get affected of this?
     if (predicted_branch_target != arch_instr.branch_target) {
       branch_mispredictions++;
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
@@ -241,11 +237,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
-
-        // Set a variable "speculate_prefetch" to true
-
-        
-        
       }
     } else {
       // if correctly predicted taken, then we can't fetch anymore instructions
@@ -259,9 +250,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         PTQ.clear();
         has_speculated = 0;
       }
-
-      // if speculate_prefetch
-      //  empty prefetch_queue
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -288,9 +276,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
   
-  // prefetch_past_mispredict();
-
- 
   instr_unique_id++;
 }
 
