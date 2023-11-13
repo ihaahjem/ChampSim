@@ -233,6 +233,9 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
         // Number of available spots in IFETCH_BUFFER. At beginning this is equal to 64 or size of ifetch_buffer
         num_ftq_entries_prefetch = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
+        if(num_ftq_entries_prefetch > 0){
+          
+        }
         
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
@@ -301,9 +304,9 @@ void O3_CPU::prefetch_past_mispredict(){
 
 
   std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
-  if(btb_result.first == 0 && btb_input.first != 0){
-    btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
-  }
+  // if(btb_result.first == 0 && btb_input.first != 0){
+  //   btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
+  // }
   
   btb_input = btb_result;
   fill_prefetch_queue(btb_result.first);

@@ -49,24 +49,20 @@ void O3_CPU::prefetcher_cycle_operate() {
     if(it == recently_prefetched.end()){
 
       #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-      // Check if it is already in L1I
-      uint64_t num_tag_bits = 64 - lg2(L1I->NUM_SET) - LOG2_BLOCK_SIZE;
-      uint64_t tag = PTQ.front() >> (lg2(L1I->NUM_SET) + LOG2_BLOCK_SIZE);
-      uint64_t index = (PTQ.front() << num_tag_bits) >> (num_tag_bits + LOG2_BLOCK_SIZE);
-
-      // Loop through the way and compare the tag
-      auto begin = L1I->block.begin() + index*L1I->NUM_WAY;
-      std::vector<BLOCK>::iterator it1 = std::find_if(begin, begin + L1I->NUM_WAY, [tag](const BLOCK block){ return block.tag == tag; });
-      if(it1 == begin + L1I->NUM_WAY){
-          L1I->prefetch_line(PTQ.front(),true, 0);
-          recently_prefetched.push_back(PTQ.front());
-          
+      
+      // Prefetch if it is not already in L1I
+      uint32_t set = L1I->get_set(PTQ.front());
+      uint32_t way = L1I->get_way(PTQ.front(),set);
+      if(way == L1I->NUM_WAY){
+        L1I->prefetch_line(PTQ.front(),true, 0);
+        recently_prefetched.push_back(PTQ.front());
       }
-      PTQ.pop_front();
+      
       if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
         recently_prefetched.pop_front();
       }
     }
+    PTQ.pop_front();
   }
 }
 
