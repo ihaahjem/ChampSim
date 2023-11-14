@@ -4,8 +4,8 @@
     "page_size": 4096,
     "heartbeat_frequency": 10000000,
     "num_cores": 1,
-    "CFLAGS": "-Wall -g -O0 -DDEBUG",
-    "CXXFLAGS": "-Wall -g -O0 -DDEBUG",
+    "CFLAGS": "-Wall -g -O3 -DDEBUG",
+    "CXXFLAGS": "-Wall -g -O3 -DDEBUG",
     "ooo_cpu": [
         {
             "frequency": 4000,
