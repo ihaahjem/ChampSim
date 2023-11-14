@@ -302,17 +302,17 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
 void O3_CPU::prefetch_past_mispredict(){
 
-
-  std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
-  // if(btb_result.first == 0 && btb_input.first != 0){
-  //   btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
-  // }
+    std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
+    if(btb_result.first == 0){
+      btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
+    }
   
-  btb_input = btb_result;
-  fill_prefetch_queue(btb_result.first);
-
-  instrs_to_speculate_this_cycle--;
-  num_ftq_entries_prefetch--;
+    btb_input = btb_result;
+    fill_prefetch_queue(btb_result.first);
+    
+    instrs_to_speculate_this_cycle--;
+    num_ftq_entries_prefetch--;
+   
 
 }
 

@@ -5,9 +5,6 @@
 #include "cache.h"
 #include "ooo_cpu.h"
 
-// #define MAX_PQ_ENTRIES 64 // Same length as IFETCH_BUFFER. TODO: Find ideal length and arguments for it
-
-// std::deque<uint64_t> PTQ;
 
 void O3_CPU::prefetcher_initialize() { 
   #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
