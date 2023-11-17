@@ -201,7 +201,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
 
-  // add this instruction to the IFETCH_BUFFER
 
   // handle branch prediction
   if (arch_instr.is_branch) {
@@ -230,13 +229,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       if (warmup_complete[cpu]) {
         btb_input = std::make_pair(arch_instr.branch_target, arch_instr.branch_type);
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+        num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
 
-        // Number of available spots in IFETCH_BUFFER. At beginning this is equal to 64 or size of ifetch_buffer
-        num_ftq_entries_prefetch = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
-        if(num_ftq_entries_prefetch > 0){
-          
-        }
-        
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
@@ -283,7 +277,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 }
 
 void O3_CPU::fill_prefetch_queue(uint64_t ip){
-  // Get block address of instruction from branch predictor
+  // Get block address
   uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
   // Add block to the prefetch queue if it is not already there and not recently prefetched
@@ -295,25 +289,28 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     }
   }
 
-  if(PTQ.size() >= MAX_PQ_ENTRIES){
+  if(PTQ.size() >= MAX_PTQ_ENTRIES){
     PTQ.pop_front();
   }
 }
 
 void O3_CPU::prefetch_past_mispredict(){
-
+    // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
+
+    // If it was not found in the BTB, select the next sequential instruction
     if(btb_result.first == 0){
       btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
     }
   
+    // Update the input of the BTB to the result from the BTB
     btb_input = btb_result;
+
+
     fill_prefetch_queue(btb_result.first);
     
     instrs_to_speculate_this_cycle--;
-    num_ftq_entries_prefetch--;
-   
-
+    num_empty_ftq_entries--;
 }
 
 
