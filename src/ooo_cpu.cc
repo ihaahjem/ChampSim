@@ -228,7 +228,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        // TODO: should be predicted_target
         if(predicted_branch_target == 0){
           btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
         }else{
@@ -277,16 +276,15 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   IFETCH_BUFFER.push_back(arch_instr);
   
   // Add to prefetch_queue
-  fill_prefetch_queue(arch_instr.ip);
+  if(PTQ.size() < MAX_PTQ_ENTRIES){
+    fill_prefetch_queue(arch_instr.ip);
+  }
+  
   
   instr_unique_id++;
 }
 
 void O3_CPU::fill_prefetch_queue(uint64_t ip){
-  
-  // TODO: Stop if there is not enough space. The earlier entries are more likely to be correct. 
-  if(PTQ.size() < MAX_PTQ_ENTRIES){
-
     // Get block address
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
@@ -298,8 +296,6 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
         PTQ.push_back(block_address);
       }
     }
-
-  }
 }
 
 void O3_CPU::prefetch_past_mispredict(){
