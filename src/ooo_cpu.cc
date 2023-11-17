@@ -276,13 +276,14 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   IFETCH_BUFFER.push_back(arch_instr);
     
   // Add to prefetch_queue
-  fill_prefetch_queue(arch_instr.ip);
+  if(PTQ.size() < MAX_PTQ_ENTRIES){
+    fill_prefetch_queue(arch_instr.ip);
+  }
   
   instr_unique_id++;
 }
 
 void O3_CPU::fill_prefetch_queue(uint64_t ip){
-  if(PTQ.size() < MAX_PTQ_ENTRIES){
     // Get block address
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
@@ -294,7 +295,6 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
         PTQ.push_back(block_address);
       }
     }
-  }
 }
 
 void O3_CPU::prefetch_past_mispredict(){
