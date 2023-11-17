@@ -429,7 +429,7 @@ int main(int argc, char** argv)
         ooo_cpu[i]->instrs_to_speculate_this_cycle = std::min<std::size_t>(ooo_cpu[i]->FETCH_WIDTH, ooo_cpu[i]->num_empty_ftq_entries); 
       }
 
-      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0 && ooo_cpu[i]->PTQ.size() < MAX_PTQ_ENTRIES){
+      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
         ooo_cpu[i]->prefetch_past_mispredict();
         ooo_cpu[i]->has_speculated = 1;
       }
