@@ -227,7 +227,14 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        btb_input = std::make_pair(arch_instr.branch_target, arch_instr.branch_type);
+        // TODO: should be predicted_target
+        if(predicted_branch_target == 0){
+          btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
+        }else{
+          btb_input = std::make_pair(predicted_branch_target, always_taken);
+        }
+        
+        // TODO: If predicted target is 0 dont set it to target, but PC of branch plus 4.
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
         num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
 
@@ -277,20 +284,22 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 }
 
 void O3_CPU::fill_prefetch_queue(uint64_t ip){
-  // Get block address
-  uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+  
+  // TODO: Stop if there is not enough space. The earlier entries are more likely to be correct. 
+  if(PTQ.size() < MAX_PTQ_ENTRIES){
 
-  // Add block to the prefetch queue if it is not already there and not recently prefetched
-  std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-  if(it0 == recently_prefetched.end()){
-    std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
-    if (it1 == PTQ.end()) {
-      PTQ.push_back(block_address);
+    // Get block address
+    uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+
+    // Add block to the prefetch queue if it is not already there and not recently prefetched
+    std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+    if(it0 == recently_prefetched.end()){
+      std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
+      if (it1 == PTQ.end()) {
+        PTQ.push_back(block_address);
+      }
     }
-  }
 
-  if(PTQ.size() >= MAX_PTQ_ENTRIES){
-    PTQ.pop_front();
   }
 }
 
@@ -300,16 +309,18 @@ void O3_CPU::prefetch_past_mispredict(){
 
     // If it was not found in the BTB, select the next sequential instruction
     if(btb_result.first == 0){
-      btb_result.first = btb_input.first + (1 << LOG2_BLOCK_SIZE);
+      btb_result.first = btb_input.first + 4;
     }
   
     // Update the input of the BTB to the result from the BTB
     btb_input = btb_result;
 
-
+    // Fill prefetch queue with the speculation
     fill_prefetch_queue(btb_result.first);
     
     instrs_to_speculate_this_cycle--;
+
+    // TODO: Increment this when intructions are read from IFETCH buffer. It will continue to fetch on branch misprediction, just stop reading trace.
     num_empty_ftq_entries--;
 }
 
