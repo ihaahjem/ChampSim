@@ -18,7 +18,7 @@ extern uint8_t MAX_INSTR_DESTINATIONS;
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
-  
+  num_empty_ftq_entries     = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
 
   retire_rob();                    // retire
   complete_inflight_instruction(); // finalize execution
@@ -234,7 +234,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
           btb_input = std::make_pair(predicted_branch_target, always_taken);
         }
         
-        num_empty_ftq_entries     = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
         
         fetch_stall = 1;
@@ -275,6 +274,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
+  num_empty_ftq_entries--;
   
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
@@ -462,7 +462,7 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
-    // num_empty_ftq_entries++;
+    num_empty_ftq_entries++;
 
     available_fetch_bandwidth--;
   }
