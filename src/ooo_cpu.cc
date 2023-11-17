@@ -462,7 +462,7 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
-    num_empty_ftq_entries++;
+    // num_empty_ftq_entries++;
 
     available_fetch_bandwidth--;
   }
