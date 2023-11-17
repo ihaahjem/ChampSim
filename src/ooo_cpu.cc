@@ -233,7 +233,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         }else{
           btb_input = std::make_pair(predicted_branch_target, always_taken);
         }
-        
+        num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
         
         fetch_stall = 1;
@@ -274,7 +274,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
-  num_empty_ftq_entries--;  
+  if(num_empty_ftq_entries > 0){
+    num_empty_ftq_entries--;
+  }
+    
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
   
@@ -464,7 +467,7 @@ void O3_CPU::promote_to_decode()
     if(num_empty_ftq_entries < IFETCH_BUFFER.size()){
       num_empty_ftq_entries++;
     }
-    
+
     available_fetch_bandwidth--;
   }
 
