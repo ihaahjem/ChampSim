@@ -274,9 +274,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
-  if(num_empty_ftq_entries > 0){
-    num_empty_ftq_entries--;
-  }
     
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
@@ -317,7 +314,6 @@ void O3_CPU::prefetch_past_mispredict(){
     
     instrs_to_speculate_this_cycle--;
 
-    // TODO: Increment this when intructions are read from IFETCH buffer. It will continue to fetch on branch misprediction, just stop reading trace.
     num_empty_ftq_entries--;
 }
 
@@ -464,7 +460,7 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
-    if(num_empty_ftq_entries < IFETCH_BUFFER.size()){
+    if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
       num_empty_ftq_entries++;
     }
 
