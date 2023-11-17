@@ -18,7 +18,7 @@ extern uint8_t MAX_INSTR_DESTINATIONS;
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
-  num_empty_ftq_entries     = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
+  
 
   retire_rob();                    // retire
   complete_inflight_instruction(); // finalize execution
