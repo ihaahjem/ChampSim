@@ -48,7 +48,7 @@ public:
   dib_t DIB{dib_set * dib_way};
 
   // PTQ and que for recently prefetched
-  #define MAX_PTQ_ENTRIES 64 // Same length as IFETCH_BUFFER. TODO: Find ideal length and arguments for it
+  #define MAX_PTQ_ENTRIES 128 // Same length as IFETCH_BUFFER.
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
   uint64_t instrs_to_speculate_this_cycle = 0;
   uint64_t num_empty_ftq_entries = 0;
