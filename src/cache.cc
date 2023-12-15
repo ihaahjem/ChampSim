@@ -65,7 +65,7 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    if (way < NUM_WAY) // HIT
+    if (way < NUM_WAY || NAME == "cpu0_L1I") // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
@@ -75,11 +75,13 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
-    } else // MISS
+    } 
+    else // MISS
     {
       bool success;
       if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
-        success = readlike_miss(handle_pkt);
+          success = readlike_miss(handle_pkt);
+        
       } else {
         // find victim
         auto set_begin = std::next(std::begin(block), set * NUM_WAY);
@@ -178,8 +180,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   handle_pkt.data = hit_block.data;
 
   // update prefetcher on load instruction
-  // Qs: What is meant by metadata?
-  // Qs: I do not understand how impl_prefetcher_cache_operate relates to the function in the prefetcher files.
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
     cpu = handle_pkt.cpu;
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
@@ -339,7 +339,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.instr_id = handle_pkt.instr_id;
   }
 
-  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
+  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0) && !(NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH))
     total_miss_latency += current_cycle - handle_pkt.cycle_enqueued;
 
   // update prefetcher
@@ -352,8 +352,13 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   impl_replacement_update_state(handle_pkt.cpu, set, way, handle_pkt.address, handle_pkt.ip, 0, handle_pkt.type, 0);
 
   // COLLECT STATS
-  sim_miss[handle_pkt.cpu][handle_pkt.type]++;
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
+  if( NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH){
+    sim_hit[handle_pkt.cpu][handle_pkt.type]++;
+  }else{
+    sim_miss[handle_pkt.cpu][handle_pkt.type]++;
+  }
+
 
   return true;
 }
