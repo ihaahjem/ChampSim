@@ -65,7 +65,7 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    if (way < NUM_WAY || NAME == "cpu0_L1I") // HIT
+    if (way < NUM_WAY) 
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
@@ -91,7 +91,6 @@ void CACHE::handle_writeback()
         if (way == NUM_WAY)
           way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
                                              handle_pkt.type);
-
         success = filllike_miss(set, way, handle_pkt);
       }
 
@@ -339,7 +338,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.instr_id = handle_pkt.instr_id;
   }
 
-  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0) && !(NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH))
+  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0) && !(NAME == "cpu0_L1I"))
     total_miss_latency += current_cycle - handle_pkt.cycle_enqueued;
 
   // update prefetcher
@@ -353,7 +352,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   // COLLECT STATS
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
-  if( NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH){
+  if( NAME == "cpu0_L1I"){
     sim_hit[handle_pkt.cpu][handle_pkt.type]++;
   }else{
     sim_miss[handle_pkt.cpu][handle_pkt.type]++;
