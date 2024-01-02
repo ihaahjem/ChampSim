@@ -339,7 +339,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.instr_id = handle_pkt.instr_id;
   }
 
-  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0) && !(NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH))
+  if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0)) //  && !(NAME == "cpu0_L1I")
     total_miss_latency += current_cycle - handle_pkt.cycle_enqueued;
 
   // update prefetcher
@@ -353,11 +353,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   // COLLECT STATS
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
-  if( NAME == "cpu0_L1I" && handle_pkt.type != PREFETCH){
-    sim_hit[handle_pkt.cpu][handle_pkt.type]++;
-  }else{
+  // if( NAME == "cpu0_L1I"){
+  //   sim_hit[handle_pkt.cpu][handle_pkt.type]++;
+  // }else{
     sim_miss[handle_pkt.cpu][handle_pkt.type]++;
-  }
+  // }
 
 
   return true;
