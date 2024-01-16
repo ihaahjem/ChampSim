@@ -28,6 +28,8 @@ public:
   std::vector<champsim::circular_buffer<ooo_model_instr>::iterator> instr_depend_on_me;
   std::vector<MemoryRequestProducer*> to_return;
 
+  bool instruction = false;
+
   uint8_t translation_level = 0, init_translation_level = 0;
 };
 

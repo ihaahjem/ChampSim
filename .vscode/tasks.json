@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+      "label": "configure build",
+      "type": "shell",
+      "command": "./config.sh",
+      "args": [
+        "champsim_config.json"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "remake",
+      "type": "shell",
+      "command": "make",
+      "dependsOn": "configure build"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "make"
+    }
+  ]
+}
