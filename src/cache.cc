@@ -65,10 +65,12 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    if (way < NUM_WAY) 
+    if (way < NUM_WAY || handle_pkt.instruction) 
     {
-      impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
-
+      if(!handle_pkt.instruction){
+        impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+      }
+      
       // COLLECT STATS
       sim_hit[handle_pkt.cpu][handle_pkt.type]++;
       sim_access[handle_pkt.cpu][handle_pkt.type]++;
@@ -121,7 +123,7 @@ void CACHE::handle_read()
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
 
-    if (way < NUM_WAY) // HIT
+    if (way < NUM_WAY || handle_pkt.instruction) // HIT
     {
       readlike_hit(set, way, handle_pkt);
     } else {
@@ -148,7 +150,7 @@ void CACHE::handle_prefetch()
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
 
-    if (way < NUM_WAY) // HIT
+    if (way < NUM_WAY || handle_pkt.instruction) // HIT
     {
       readlike_hit(set, way, handle_pkt);
     } else {
@@ -174,32 +176,37 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
-  BLOCK& hit_block = block[set * NUM_WAY + way];
-
-  handle_pkt.data = hit_block.data;
-
-  // update prefetcher on load instruction
-  if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
-    cpu = handle_pkt.cpu;
-    uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
-    handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 1, handle_pkt.type, handle_pkt.pf_metadata);
+  if(!handle_pkt.instruction){
+  
+    BLOCK& hit_block = block[set * NUM_WAY + way];
+  
+    handle_pkt.data = hit_block.data;
+  
+    // update prefetcher on load instruction
+    if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
+      cpu = handle_pkt.cpu;
+      uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
+      handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 1, handle_pkt.type, handle_pkt.pf_metadata);
+    }
+  
+    // update replacement policy
+    impl_replacement_update_state(handle_pkt.cpu, set, way, hit_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+  
+      // update prefetch stats and reset prefetch bit
+    if (hit_block.prefetch) {
+      pf_useful++;
+      hit_block.prefetch = 0;
+    }
   }
 
-  // update replacement policy
-  impl_replacement_update_state(handle_pkt.cpu, set, way, hit_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+  for (auto ret : handle_pkt.to_return)
+    ret->return_data(&handle_pkt);
 
   // COLLECT STATS
   sim_hit[handle_pkt.cpu][handle_pkt.type]++;
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
 
-  for (auto ret : handle_pkt.to_return)
-    ret->return_data(&handle_pkt);
 
-  // update prefetch stats and reset prefetch bit
-  if (hit_block.prefetch) {
-    pf_useful++;
-    hit_block.prefetch = 0;
-  }
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)

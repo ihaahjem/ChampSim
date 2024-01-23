@@ -381,7 +381,7 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   int rq_index = L1I_bus.lower_level->add_rq(&fetch_packet);
 
   if (rq_index != -2) {
-    // mark all instructions from this cache line as having been fetched
+    //mark all instructions from this cache line as having been fetched
     for (auto dep_it : fetch_packet.instr_depend_on_me) {
       dep_it->fetched = INFLIGHT;
     }
