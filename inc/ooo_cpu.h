@@ -55,6 +55,23 @@ public:
   uint64_t has_speculated = 0;
   std::pair<uint64_t, uint8_t> btb_input;
 
+  //
+  uint64_t num_entries_in_ftq = 0;
+
+  // Stats
+  uint64_t num_ftq_flush = 0;
+  uint64_t num_ftq_flush_conditional = 0;
+  uint64_t num_ftq_flush_call_return = 0;
+  uint64_t num_ftq_flush_other = 0;
+  uint64_t num_prefetched_wrong_path = 0;
+  uint64_t num_entries_in_ftq_when_flush = 0;
+  uint64_t num_useful_prefetch_fetch_stall = 0;
+  uint64_t num_cycles_fetch_stall = 0;
+
+    // What did we prefetcch on wrong path and how many of them were useful
+    uint64_t index_first_spec = 0;
+    uint64_t num_instr_fetch_stall = 0;
+
   std::deque<uint64_t> PTQ;
   std::deque<uint64_t> recently_prefetched;
 

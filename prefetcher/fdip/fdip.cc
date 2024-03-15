@@ -51,7 +51,15 @@ void O3_CPU::prefetcher_cycle_operate() {
       uint32_t set = L1I->get_set(PTQ.front());
       uint32_t way = L1I->get_way(PTQ.front(),set);
       if(way == L1I->NUM_WAY){
-        L1I->prefetch_line(PTQ.front(),true, 0);
+        if(index_first_spec == 0 && num_instr_fetch_stall > 0){
+          // Marker som fetch_stall
+          L1I->prefetch_line(PTQ.front(),true, 0, true);
+          //Increment number of wrong path instructions prefetched
+          num_prefetched_wrong_path++;
+        }else{
+          // Marker som ikke fetch_stall
+          L1I->prefetch_line(PTQ.front(),true, 0, false);
+        }
         recently_prefetched.push_back(PTQ.front());
       }
       
@@ -60,6 +68,14 @@ void O3_CPU::prefetcher_cycle_operate() {
       }
     }
     PTQ.pop_front();
+    if(index_first_spec == 0 && num_instr_fetch_stall > 0){
+      num_instr_fetch_stall--;
+    }
+
+    if(index_first_spec > 0){
+      index_first_spec--;
+    }
+
   }
 }
 

@@ -19,6 +19,9 @@ void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
 
+  if(fetch_stall){
+    num_cycles_fetch_stall++;
+  }
 
   retire_rob();                    // retire
   complete_inflight_instruction(); // finalize execution
@@ -234,11 +237,29 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
           btb_input = std::make_pair(predicted_branch_target, always_taken);
         }
         num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
-        instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+        if(arch_instr.branch_taken == 0){
+          instrs_to_speculate_this_cycle = 0;
+        }else{
+          instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+        }
         
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
+
+        // Stats
+        num_ftq_flush++;
+        if(arch_instr.branch_type == BRANCH_CONDITIONAL){
+          num_ftq_flush_conditional++;
+        }else if(arch_instr.branch_type == BRANCH_OTHER){
+          num_ftq_flush_other++;
+        }else{
+          num_ftq_flush_call_return++;
+        }
+
+        num_entries_in_ftq_when_flush += num_entries_in_ftq;
+        index_first_spec = PTQ.size();
+        num_instr_fetch_stall = instrs_to_speculate_this_cycle;
       }
     } else {
       // if correctly predicted taken, then we can't fetch anymore instructions
@@ -274,6 +295,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
+  num_entries_in_ftq++;
     
   // Add to prefetch_queue
   if(PTQ.size() < MAX_PTQ_ENTRIES){
@@ -460,6 +482,7 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
+    num_entries_in_ftq--;
     if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
       num_empty_ftq_entries++;
     }
@@ -548,7 +571,7 @@ void O3_CPU::dispatch_instruction()
     throw champsim::deadlock{cpu};
 }
 
-int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(pf_v_addr,true, 0); }
+int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(pf_v_addr,true, 0, false); }
 
 void O3_CPU::schedule_instruction()
 {
