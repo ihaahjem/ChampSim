@@ -67,6 +67,8 @@ public:
   uint64_t num_entries_in_ftq_when_flush = 0;
   uint64_t num_useful_prefetch_fetch_stall = 0;
   uint64_t num_cycles_fetch_stall = 0;
+  bool conditional_bm = false;
+  uint64_t num_prefetched_wrong_path_contitional = 0;
 
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;

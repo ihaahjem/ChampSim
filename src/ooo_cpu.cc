@@ -249,8 +249,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
         // Stats
         num_ftq_flush++;
+        conditional_bm = false;
         if(arch_instr.branch_type == BRANCH_CONDITIONAL){
           num_ftq_flush_conditional++;
+          conditional_bm = true;
         }else if(arch_instr.branch_type == BRANCH_OTHER){
           num_ftq_flush_other++;
         }else{
@@ -262,6 +264,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         num_instr_fetch_stall = instrs_to_speculate_this_cycle;
       }
     } else {
+      conditional_bm = false;
       // if correctly predicted taken, then we can't fetch anymore instructions
       // this cycle
       if (arch_instr.branch_taken == 1) {
@@ -571,7 +574,7 @@ void O3_CPU::dispatch_instruction()
     throw champsim::deadlock{cpu};
 }
 
-int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(pf_v_addr,true, 0, false); }
+int O3_CPU::prefetch_code_line(uint64_t pf_v_addr) { return static_cast<CACHE*>(L1I_bus.lower_level)->prefetch_line(pf_v_addr,true, 0, false, false); }
 
 void O3_CPU::schedule_instruction()
 {

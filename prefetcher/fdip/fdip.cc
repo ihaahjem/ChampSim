@@ -53,12 +53,15 @@ void O3_CPU::prefetcher_cycle_operate() {
       if(way == L1I->NUM_WAY){
         if(index_first_spec == 0 && num_instr_fetch_stall > 0){
           // Marker som fetch_stall
-          L1I->prefetch_line(PTQ.front(),true, 0, true);
+          L1I->prefetch_line(PTQ.front(),true, 0, true, conditional_bm);
           //Increment number of wrong path instructions prefetched
           num_prefetched_wrong_path++;
+          if(conditional_bm){
+            num_prefetched_wrong_path_contitional++;
+          }
         }else{
           // Marker som ikke fetch_stall
-          L1I->prefetch_line(PTQ.front(),true, 0, false);
+          L1I->prefetch_line(PTQ.front(),true, 0, false, false);
         }
         recently_prefetched.push_back(PTQ.front());
       }

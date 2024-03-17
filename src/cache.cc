@@ -200,6 +200,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if (hit_block.prefetch) {
     if(handle_pkt.fetch_stall){
       num_prefetched_useful_wrong_path++;
+      if(handle_pkt.conditional_bm){
+        num_prefetched_useful_wrong_path_conditional++;
+      }
     }
     pf_useful++;
     hit_block.prefetch = 0;
@@ -518,7 +521,7 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm)
 {
   pf_requested++;
 
@@ -532,6 +535,7 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
   pf_packet.v_address = virtual_prefetch ? pf_addr : 0;
 
   pf_packet.fetch_stall = fetch_stall;
+  pf_packet.conditional_bm = conditional_bm;
 
   if (virtual_prefetch) {
     if (!VAPQ.full()) {
@@ -563,7 +567,7 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool
               << std::endl;
     deprecate_printed = true;
   }
-  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0);
+  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false);
 }
 
 void CACHE::va_translate_prefetches()

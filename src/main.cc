@@ -93,6 +93,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
     cout << " PREFETCH  REQUESTED: " << setw(10) << cache->pf_requested << "  ISSUED: " << setw(10) << cache->pf_issued;
     cout << "  USEFUL: " << setw(10) << cache->pf_useful << "  USELESS: " << setw(10) << cache->pf_useless << endl;
     cout << "  USEFUL WRONG PATH: " << setw(10) << cache->num_prefetched_useful_wrong_path << endl;
+    cout << "  USEFUL WRONG PATH CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << endl;
 
     cout << cache->NAME;
     cout << " AVERAGE MISS LATENCY: " << (1.0 * (cache->total_miss_latency)) / TOTAL_MISS << " cycles" << endl;
@@ -484,6 +485,7 @@ int main(int argc, char** argv)
         cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
         cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
+        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
 
 
