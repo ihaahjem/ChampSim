@@ -238,6 +238,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // Mark the prefetch as useful
       if (mshr_entry->pf_origin_level == fill_level)
         pf_useful++;
+        if(handle_pkt.fetch_stall){
+        num_prefetched_useful_wrong_path++;
+        if(handle_pkt.conditional_bm){
+          num_prefetched_useful_wrong_path_conditional++;
+        }
+    }
 
       uint64_t prior_event_cycle = mshr_entry->event_cycle;
       *mshr_entry = handle_pkt;
