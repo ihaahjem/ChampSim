@@ -274,6 +274,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
       if(has_speculated){
         PTQ.clear();
+        ptq_prefetch_entry = 0;
         has_speculated = 0;
       }
     }
@@ -298,6 +299,9 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
+
+  FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
+
   num_entries_in_ftq++;
     
   // Add to prefetch_queue
@@ -342,6 +346,15 @@ void O3_CPU::prefetch_past_mispredict(){
     num_empty_ftq_entries--;
 }
 
+//Check if what is being fetched is from a different cache block than the isntruction before
+void O3_CPU::new_cache_block_fetch(){
+  if(FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0 && PTQ.size() && FTQ.size()){
+        PTQ.pop_front();
+        if(ptq_prefetch_entry){
+          ptq_prefetch_entry--;
+        }
+  }
+}
 
 void O3_CPU::check_dib()
 {
@@ -485,6 +498,11 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
+    FTQ.pop_front();
+    //Check if it is a new cache block at the head and the PTQ should also be popped
+    new_cache_block_fetch();
+    current_block_address_ftq = FTQ.front();
+
     num_entries_in_ftq--;
     if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
       num_empty_ftq_entries++;

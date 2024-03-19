@@ -53,6 +53,8 @@ public:
   uint64_t instrs_to_speculate_this_cycle = 0;
   uint64_t num_empty_ftq_entries = 0;
   uint64_t has_speculated = 0;
+  uint64_t ptq_prefetch_entry = 0;
+  uint64_t current_block_address_ftq = 0;
   std::pair<uint64_t, uint8_t> btb_input;
 
   //
@@ -75,6 +77,7 @@ public:
     uint64_t num_instr_fetch_stall = 0;
 
   std::deque<uint64_t> PTQ;
+  std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
 
   // reorder buffer, load/store queue, register file
@@ -121,6 +124,7 @@ public:
   // PTQ
   void fill_prefetch_queue(uint64_t ip);
   void prefetch_past_mispredict();
+  void new_cache_block_fetch();
 
 
   void check_dib();

@@ -41,19 +41,20 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
 void O3_CPU::prefetcher_cycle_operate() {
   // Perform prefetching of what is in the prefetch queue every cycle.
   if (PTQ.size()) {
-    // Check if it is recently prefetched
-    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), PTQ.front());
+    uint64_t element = PTQ.at(ptq_prefetch_entry);
+    // // Check if it is recently prefetched
+    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), element);
     if(it == recently_prefetched.end()){
 
       #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
       
       // Prefetch if it is not already in L1I
-      uint32_t set = L1I->get_set(PTQ.front());
-      uint32_t way = L1I->get_way(PTQ.front(),set);
+      uint32_t set = L1I->get_set(element);
+      uint32_t way = L1I->get_way(element,set);
       if(way == L1I->NUM_WAY){
         if(index_first_spec == 0 && num_instr_fetch_stall > 0){
           // Marker som fetch_stall
-          L1I->prefetch_line(PTQ.front(),true, 0, true, conditional_bm);
+          L1I->prefetch_line(element,true, 0, true, conditional_bm);
           //Increment number of wrong path instructions prefetched
           num_prefetched_wrong_path++;
           if(conditional_bm){
@@ -61,16 +62,20 @@ void O3_CPU::prefetcher_cycle_operate() {
           }
         }else{
           // Marker som ikke fetch_stall
-          L1I->prefetch_line(PTQ.front(),true, 0, false, false);
+          L1I->prefetch_line(element,true, 0, false, false);
         }
-        recently_prefetched.push_back(PTQ.front());
+        recently_prefetched.push_back(element);
       }
       
       if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
         recently_prefetched.pop_front();
       }
     }
-    PTQ.pop_front();
+    
+    if(ptq_prefetch_entry < PTQ.size() - 1){
+      ptq_prefetch_entry++;
+    }
+
     if(index_first_spec == 0 && num_instr_fetch_stall > 0){
       num_instr_fetch_stall--;
     }
