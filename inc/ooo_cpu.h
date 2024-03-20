@@ -85,6 +85,9 @@ public:
 
   void operate();
 
+  // stats
+ uint64_t num_cycles_fetch_stall = 0;
+
   // functions
   void init_instruction(ooo_model_instr instr);
   void check_dib();
