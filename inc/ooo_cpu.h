@@ -75,6 +75,7 @@ public:
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;
     uint64_t num_instr_fetch_stall = 0;
+    uint64_t num_cb_to_PTQ_fetch_stall = 0;
 
   std::deque<uint64_t> PTQ;
   std::deque<uint64_t> FTQ;

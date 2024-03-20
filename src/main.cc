@@ -487,6 +487,7 @@ int main(int argc, char** argv)
         cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
         cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
+        cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
 
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
