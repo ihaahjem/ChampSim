@@ -329,7 +329,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
         PTQ.push_back(block_address);
 
         // If fetch_stall increment the number of cache blocks added during wrong path
-        if(fetch_stall){
+        if(fetch_stall == 1){
           num_cb_to_PTQ_fetch_stall++;
         }
       }
