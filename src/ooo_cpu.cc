@@ -248,6 +248,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         arch_instr.branch_mispredicted = 1;
 
         // Stats
+        num_fetch_stall++;
         num_ftq_flush++;
         conditional_bm = false;
         if(arch_instr.branch_type == BRANCH_CONDITIONAL){
@@ -459,7 +460,25 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
+
+          // Get stats for number of cb added during fetch stall
+    if(num_cb_to_PTQ_fetch_stall < 6){
+      num_cb_0_5++;
+    }else if(num_cb_to_PTQ_fetch_stall > 5 && num_cb_to_PTQ_fetch_stall < 11){
+      num_cb_6_10++;
+    }else if(num_cb_to_PTQ_fetch_stall > 10 && num_cb_to_PTQ_fetch_stall < 16){
+      num_cb_11_15++;
+    }else if(num_cb_to_PTQ_fetch_stall > 15 && num_cb_to_PTQ_fetch_stall < 21){
+      num_cb_16_20++;
+    }else if(num_cb_to_PTQ_fetch_stall > 20 && num_cb_to_PTQ_fetch_stall < 26){
+      num_cb_21_25++;
+    }else if(num_cb_to_PTQ_fetch_stall > 25){
+      num_cb_26_128++;
+    }
+
+    num_cb_to_PTQ_fetch_stall = 0;
   }
+
 
   if (IFETCH_BUFFER.empty())
     return;

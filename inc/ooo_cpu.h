@@ -76,6 +76,14 @@ public:
     uint64_t index_first_spec = 0;
     uint64_t num_instr_fetch_stall = 0;
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
+      uint64_t num_cb_0_5 = 0;
+      uint64_t num_cb_6_10 = 0;
+      uint64_t num_cb_11_15 = 0;
+      uint64_t num_cb_16_20 = 0;
+      uint64_t num_cb_21_25 = 0;
+      uint64_t num_cb_26_128 = 0;
+
+      uint64_t num_fetch_stall = 0;
 
   std::deque<uint64_t> PTQ;
   std::deque<uint64_t> FTQ;
