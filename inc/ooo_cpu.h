@@ -83,6 +83,18 @@ public:
       uint64_t num_cb_21_25 = 0;
       uint64_t num_cb_26_128 = 0;
 
+    //time to fetch after bm resolved that has not been prefetched
+    uint64_t cb_until_time_start = 0;
+    uint64_t cycles_fetch_first_cb_after_prf = 0;
+    bool start_counting_cycles = false;
+    uint64_t index_start_count = 0;
+    uint64_t cycles_1 = 0;
+    uint64_t cycles_2 = 0;
+    uint64_t cycles_3 = 0;
+    uint64_t cycles_4 = 0;
+    uint64_t cycles_above = 0;
+    uint64_t percentage_tot = 0;
+
       uint64_t num_fetch_stall = 0;
 
   std::deque<uint64_t> PTQ;

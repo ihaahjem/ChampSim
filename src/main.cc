@@ -494,7 +494,12 @@ int main(int argc, char** argv)
         cout << " Percentage cb num_16_20 " << (0.0+ooo_cpu[i]->num_cb_16_20)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_21_25 " << (0.0+ooo_cpu[i]->num_cb_21_25)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_26_128 " << (0.0+ooo_cpu[i]->num_cb_26_128)/ooo_cpu[i]->num_fetch_stall << endl;
-
+        cout << " AVG fetch first after cb " << (0.0+ooo_cpu[i]->cycles_fetch_first_cb_after_prf)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " cycles 1 " << (0.0+ooo_cpu[i]->cycles_1)/ooo_cpu[i]->percentage_tot << endl;
+        cout << " cycles 2 " << (0.0+ooo_cpu[i]->cycles_2)/ooo_cpu[i]->percentage_tot << endl;
+        cout << " cycles 3 " << (0.0+ooo_cpu[i]->cycles_3)/ooo_cpu[i]->percentage_tot << endl;
+        cout << " cycles 4 " << (0.0+ooo_cpu[i]->cycles_4)/ooo_cpu[i]->percentage_tot << endl;
+        cout << " above 4 " << (0.0+ooo_cpu[i]->cycles_above)/ooo_cpu[i]->percentage_tot << endl;
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);

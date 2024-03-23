@@ -23,6 +23,10 @@ void O3_CPU::operate()
     num_cycles_fetch_stall++;
   }
 
+  if(start_counting_cycles){
+    cycles_fetch_first_cb_after_prf++;
+  }
+
   retire_rob();                    // retire
   complete_inflight_instruction(); // finalize execution
   execute_instruction();           // execute instructions
@@ -247,6 +251,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
 
+        cycles_fetch_first_cb_after_prf = 0;
+        start_counting_cycles = false;
+        index_start_count = 0;
+
         // Stats
         num_fetch_stall++;
         num_ftq_flush++;
@@ -273,11 +281,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       }
       instrs_to_speculate_this_cycle = 0;
 
-      if(has_speculated){
-        PTQ.clear();
-        ptq_prefetch_entry = 0;
-        has_speculated = 0;
-      }
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -301,9 +304,27 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
 
+  if(cb_until_time_start){
+    if(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
+      cb_until_time_start--;
+    }
+    if(cb_until_time_start == 0){
+      //Start counting cycles until this entry is fetched!
+      start_counting_cycles = true;
+      index_start_count = FTQ.size();
+    }
+  }
+
   FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
 
+
   num_entries_in_ftq++;
+
+  if(has_speculated){
+    PTQ.clear();
+    ptq_prefetch_entry = 0;
+    has_speculated = 0;
+  }
     
   // Add to prefetch_queue
   if(PTQ.size() < MAX_PTQ_ENTRIES){
@@ -475,6 +496,7 @@ void O3_CPU::fetch_instruction()
     }else if(num_cb_to_PTQ_fetch_stall > 25){
       num_cb_26_128++;
     }
+    cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
     num_cb_to_PTQ_fetch_stall = 0;
   }
@@ -537,6 +559,25 @@ void O3_CPU::promote_to_decode()
 
     IFETCH_BUFFER.pop_front();
     FTQ.pop_front();
+    if(index_first_spec){
+      index_first_spec--;
+    }
+    if(!index_start_count && start_counting_cycles){
+      start_counting_cycles = false;
+      if(cycles_fetch_first_cb_after_prf == 1){
+        cycles_1++;
+      }else if(cycles_fetch_first_cb_after_prf == 2){
+        cycles_2++;
+      }else if(cycles_fetch_first_cb_after_prf == 3){
+        cycles_3++;
+      }else if(cycles_fetch_first_cb_after_prf == 4){
+        cycles_4++;
+      }else{
+        cycles_above++;
+      }
+      percentage_tot++;
+      cycles_fetch_first_cb_after_prf=0;
+    }
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
     current_block_address_ftq = FTQ.front();
