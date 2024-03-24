@@ -495,7 +495,7 @@ int main(int argc, char** argv)
         cout << " Percentage cb num_21_25 " << (0.0+ooo_cpu[i]->num_cb_21_25)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_26_128 " << (0.0+ooo_cpu[i]->num_cb_26_128)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " AVG fetch first after cb " << (0.0+ooo_cpu[i]->cycles_fetch_first_cb_after_prf)/ooo_cpu[i]->num_fetch_stall << endl;
-        uint64_t tot_cycles= ooo_cpu[i]->cycles_0_2 + ooo_cpu[i]->cycles_3_5 + ooo_cpu[i]->cycles_6_8 + ooo_cpu[i]->cycles_9_11;
+        uint64_t tot_cycles= ooo_cpu[i]->cycles_0_2 + ooo_cpu[i]->cycles_3_5 + ooo_cpu[i]->cycles_6_8 + ooo_cpu[i]->cycles_9_11 + ooo_cpu[i]->cycles_above;
         if(tot_cycles){
           cout << " cycles 0_2 " << (0.0+ooo_cpu[i]->cycles_0_2)/tot_cycles << endl;
           cout << " cycles 3_5 " << (0.0+ooo_cpu[i]->cycles_3_5)/tot_cycles << endl;
