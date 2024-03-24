@@ -564,14 +564,14 @@ void O3_CPU::promote_to_decode()
     }
     if(!index_start_count && start_counting_cycles){
       start_counting_cycles = false;
-      if(cycles_fetch_first_cb_after_prf == 1){
-        cycles_1++;
-      }else if(cycles_fetch_first_cb_after_prf == 2){
-        cycles_2++;
-      }else if(cycles_fetch_first_cb_after_prf == 3){
-        cycles_3++;
-      }else if(cycles_fetch_first_cb_after_prf == 4){
-        cycles_4++;
+      if(cycles_fetch_first_cb_after_prf < 3){
+        cycles_0_2++;
+      }else if(cycles_fetch_first_cb_after_prf > 2 && cycles_fetch_first_cb_after_prf < 6){
+        cycles_3_5++;
+      }else if(cycles_fetch_first_cb_after_prf > 5 && cycles_fetch_first_cb_after_prf < 9){
+        cycles_6_8++;
+      }else if(cycles_fetch_first_cb_after_prf > 8 && cycles_fetch_first_cb_after_prf < 12){
+        cycles_9_11++;
       }else{
         cycles_above++;
       }
