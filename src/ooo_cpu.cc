@@ -575,7 +575,6 @@ void O3_CPU::promote_to_decode()
       }else{
         cycles_above++;
       }
-      percentage_tot++;
       cycles_fetch_first_cb_after_prf=0;
     }
     //Check if it is a new cache block at the head and the PTQ should also be popped
