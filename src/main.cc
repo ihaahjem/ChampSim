@@ -502,6 +502,12 @@ int main(int argc, char** argv)
           cout << " cycles 6_8 " << (0.0+ooo_cpu[i]->cycles_6_8)/tot_cycles << endl;
           cout << " cycles 9_11 " << (0.0+ooo_cpu[i]->cycles_9_11)/tot_cycles << endl;
           cout << " above 11 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
+        }else{
+          cout << " cycles 0_2 " <<0 << endl;
+          cout << " cycles 3_5 " <<0 << endl;
+          cout << " cycles 6_8 " <<0 << endl;
+          cout << " cycles 9_11 "<<0  << endl;
+          cout << " above 11 "   <<0  << endl;
         }
 
 
