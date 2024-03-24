@@ -55,6 +55,8 @@ public:
   // stats
   uint64_t num_prefetched_useful_wrong_path = 0; 
   uint64_t num_prefetched_useful_wrong_path_conditional = 0;
+  uint64_t num_prefetched_useless_wrong_path = 0;
+  uint64_t num_prefetched_useless_wrong_path_conditional = 0;
 
 
   // functions

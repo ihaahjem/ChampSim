@@ -333,8 +333,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     else
       evicting_address = fill_block.v_address & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
 
-    if (fill_block.prefetch)
+    if (fill_block.prefetch){
       pf_useless++;
+      if(handle_pkt.fetch_stall){
+        num_prefetched_useless_wrong_path++;
+        if(handle_pkt.conditional_bm){
+          num_prefetched_useless_wrong_path_conditional++;
+        }
+      }
+    }
 
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
