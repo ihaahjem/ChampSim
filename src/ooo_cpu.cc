@@ -235,12 +235,15 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        if(predicted_branch_target == 0){
-          btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
-        }else{
-          btb_input = std::make_pair(predicted_branch_target, always_taken);
+        if(ptq_init){
+          if(predicted_branch_target == 0){
+            btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
+          }else{
+            btb_input = std::make_pair(predicted_branch_target, always_taken);
+          }
+          num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
         }
-        num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
+
         if(arch_instr.branch_taken == 0){
           instrs_to_speculate_this_cycle = 0;
         }else{
@@ -281,6 +284,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       }
       instrs_to_speculate_this_cycle = 0;
 
+      if(!ptq_init){
+        //Set instrs to speculate this cycle
+        instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+      }
+
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -319,16 +327,14 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
 
   num_entries_in_ftq++;
-
-  if(has_speculated){
-    PTQ.clear();
-    ptq_prefetch_entry = 0;
-    has_speculated = 0;
-  }
     
   // Add to prefetch_queue
-  if(PTQ.size() < MAX_PTQ_ENTRIES){
+  if(PTQ.size() < MAX_PTQ_ENTRIES && ptq_init){
     fill_prefetch_queue(arch_instr.ip);
+  }
+
+  if(fetch_stall){
+    ptq_init = false;
   }
   
   instr_unique_id++;
@@ -395,6 +401,30 @@ void O3_CPU::new_cache_block_fetch(){
           ptq_prefetch_entry--;
         }
   }
+
+  //Compare heads if FTQ.size() > 0
+  //If the heads are different then flush the PTQ
+  if(FTQ.front() != PTQ.front()){
+    // Flush the ptq
+    PTQ.clear();
+
+    //Fill the ptq with entires from the ftq
+
+    //ptq_init is true
+    ptq_init = true;
+
+    //ptq_prefetch_entry is zero
+    ptq_prefetch_entry = 0;
+
+    // instrs to speculate is zero
+    instrs_to_speculate_this_cycle = 0;
+
+    // has_speculted is false
+    has_speculated = 0;
+  }
+  // If the same then continue same as before
+
+
 }
 
 void O3_CPU::check_dib()
