@@ -347,28 +347,28 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     // Add block to the prefetch queue if it is not already there and not recently prefetched
     // std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
     // if(it0 == recently_prefetched.end()){
-      std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
-      if (it1 == PTQ.end()) {
-        PTQ.push_back(block_address);
-        if(fetch_stall == 1){
-          num_cb_to_PTQ_fetch_stall++;
-        }
-      }
+      // std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
+      // if (it1 == PTQ.end()) {
+      //   PTQ.push_back(block_address);
+      //   if(fetch_stall == 1){
+      //     num_cb_to_PTQ_fetch_stall++;
+      //   }
+      // }
     // }
 
-    // if(PTQ.size() == 0){
-    //   PTQ.push_back(block_address);
-    //   // If fetch_stall increment the number of cache blocks added during wrong path
-    //   if(fetch_stall == 1){
-    //     num_cb_to_PTQ_fetch_stall++;
-    //   }
-    // }else if(PTQ.back() != block_address){
-    //   PTQ.push_back(block_address);
-    //   // If fetch_stall increment the number of cache blocks added during wrong path
-    //   if(fetch_stall == 1){
-    //     num_cb_to_PTQ_fetch_stall++;
-    //   }
-    // }
+    if(!PTQ.size()){
+      PTQ.push_back(block_address);
+      // If fetch_stall increment the number of cache blocks added during wrong path
+      if(fetch_stall == 1){
+        num_cb_to_PTQ_fetch_stall++;
+      }
+    }else if(PTQ.back() != block_address){
+      PTQ.push_back(block_address);
+      // If fetch_stall increment the number of cache blocks added during wrong path
+      if(fetch_stall == 1){
+        num_cb_to_PTQ_fetch_stall++;
+      }
+    }
 
 
 }
@@ -404,27 +404,25 @@ void O3_CPU::new_cache_block_fetch(){
 
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(FTQ.front() != PTQ.front()){
+  if(FTQ.front() != PTQ.front() && PTQ.size() && FTQ.size()){
     // Flush the ptq
     PTQ.clear();
 
     //Fill the ptq with entires from the ftq
+    auto copy_ptq = PTQ;
+    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
+        copy_ptq.push_back(*it); 
+    }
+    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
+      fill_prefetch_queue(*it);
+    }
 
-    //ptq_init is true
     ptq_init = true;
-
-    //ptq_prefetch_entry is zero
     ptq_prefetch_entry = 0;
-
-    // instrs to speculate is zero
     instrs_to_speculate_this_cycle = 0;
-
-    // has_speculted is false
     has_speculated = 0;
   }
   // If the same then continue same as before
-
-
 }
 
 void O3_CPU::check_dib()
