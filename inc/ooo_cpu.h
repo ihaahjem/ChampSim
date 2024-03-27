@@ -55,6 +55,7 @@ public:
   uint64_t has_speculated = 0;
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
+  uint64_t current_block_address_ptq_back = 0;
   uint64_t ptq_init = true;
   std::pair<uint64_t, uint8_t> btb_input;
 

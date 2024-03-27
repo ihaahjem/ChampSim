@@ -344,31 +344,14 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     // Get block address
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
-    // Add block to the prefetch queue if it is not already there and not recently prefetched
-    // std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-    // if(it0 == recently_prefetched.end()){
-      // std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
-      // if (it1 == PTQ.end()) {
-      //   PTQ.push_back(block_address);
-      //   if(fetch_stall == 1){
-      //     num_cb_to_PTQ_fetch_stall++;
-      //   }
-      // }
-    // }
-
-    if(!PTQ.size()){
+    //Check that the block address is not the same as the last block address added to PTQ
+    if(current_block_address_ptq_back != block_address || current_block_address_ptq_back == 0){
       PTQ.push_back(block_address);
-      // If fetch_stall increment the number of cache blocks added during wrong path
-      if(fetch_stall == 1){
-        num_cb_to_PTQ_fetch_stall++;
-      }
-    }else if(PTQ.back() != block_address){
-      PTQ.push_back(block_address);
-      // If fetch_stall increment the number of cache blocks added during wrong path
       if(fetch_stall == 1){
         num_cb_to_PTQ_fetch_stall++;
       }
     }
+    current_block_address_ptq_back = block_address;
 
 
 }
@@ -421,6 +404,7 @@ void O3_CPU::new_cache_block_fetch(){
     ptq_prefetch_entry = 0;
     instrs_to_speculate_this_cycle = 0;
     has_speculated = 0;
+    current_block_address_ptq_back = 0;
   }
   // If the same then continue same as before
 }
