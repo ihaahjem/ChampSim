@@ -54,9 +54,12 @@ public:
 
   // stats
   uint64_t num_prefetched_useful_wrong_path = 0; 
+  uint64_t num_prefetched_useful_wrong_path_after_flush = 0; 
   uint64_t num_prefetched_useful_wrong_path_conditional = 0;
   uint64_t num_prefetched_useless_wrong_path = 0;
+  uint64_t num_prefetched_useless_wrong_path_after_flush = 0;
   uint64_t num_prefetched_useless_wrong_path_conditional = 0;
+  
 
 
   // functions
@@ -76,7 +79,7 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   int invalidate_entry(uint64_t inval_addr);
-  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm);
+  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, bool wp_after_ftqflush);
   int prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata); // deprecated
 
   void add_mshr(PACKET* packet);

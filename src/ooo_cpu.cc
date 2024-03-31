@@ -349,6 +349,9 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       PTQ.push_back(block_address);
       if(fetch_stall == 1){
         num_cb_to_PTQ_fetch_stall++;
+      }else if(!ptq_init){
+        //increment num_cb to PTQ wp
+        num_instr_not_fetch_stall++;
       }
     }
     current_block_address_ptq_back = block_address;
@@ -390,6 +393,8 @@ void O3_CPU::new_cache_block_fetch(){
   if(FTQ.front() != PTQ.front() && PTQ.size() && FTQ.size()){
     // Flush the ptq
     PTQ.clear();
+
+    wp_after_ftqflush = false;
 
     //Fill the ptq with entires from the ftq
     auto copy_ptq = PTQ;

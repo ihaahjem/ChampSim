@@ -204,6 +204,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
         num_prefetched_useful_wrong_path_conditional++;
       }
     }
+    if(handle_pkt.wp_after_ftqflush){
+      num_prefetched_useful_wrong_path_after_flush++;
+    }
     pf_useful++;
     hit_block.prefetch = 0;
   }
@@ -243,6 +246,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
           if(handle_pkt.conditional_bm){
             num_prefetched_useful_wrong_path_conditional++;
           }
+        }
+        if(handle_pkt.wp_after_ftqflush){
+          num_prefetched_useful_wrong_path_after_flush++;
         }
 
       uint64_t prior_event_cycle = mshr_entry->event_cycle;
@@ -340,6 +346,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(handle_pkt.conditional_bm){
           num_prefetched_useless_wrong_path_conditional++;
         }
+      }
+      if(handle_pkt.wp_after_ftqflush){
+        num_prefetched_useless_wrong_path_after_flush++;
       }
     }
 
@@ -533,7 +542,7 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, bool wp_after_ftqflush)
 {
   pf_requested++;
 
@@ -548,6 +557,7 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
 
   pf_packet.fetch_stall = fetch_stall;
   pf_packet.conditional_bm = conditional_bm;
+  pf_packet.wp_after_ftqflush = wp_after_ftqflush;
 
   if (virtual_prefetch) {
     if (!VAPQ.full()) {
@@ -579,7 +589,7 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool
               << std::endl;
     deprecate_printed = true;
   }
-  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false);
+  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false, false);
 }
 
 void CACHE::va_translate_prefetches()

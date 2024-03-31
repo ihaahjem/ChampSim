@@ -67,16 +67,18 @@ public:
   uint64_t num_ftq_flush_conditional = 0;
   uint64_t num_ftq_flush_call_return = 0;
   uint64_t num_ftq_flush_other = 0;
-  uint64_t num_prefetched_wrong_path = 0;
   uint64_t num_entries_in_ftq_when_flush = 0;
-  uint64_t num_useful_prefetch_fetch_stall = 0;
   uint64_t num_cycles_fetch_stall = 0;
   bool conditional_bm = false;
-  uint64_t num_prefetched_wrong_path_contitional = 0;
+  uint64_t num_prefetched_wrong_path = 0;
+  uint64_t num_prefetched_wrong_path_conditional = 0;
+  uint64_t num_prefetched_wrong_path_after_flush = 0;
+  bool wp_after_ftqflush = false;
 
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;
     uint64_t num_instr_fetch_stall = 0;
+    uint64_t num_instr_not_fetch_stall = 0;
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
       uint64_t num_cb_0_5 = 0;
       uint64_t num_cb_6_10 = 0;

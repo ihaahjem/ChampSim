@@ -54,15 +54,19 @@ void O3_CPU::prefetcher_cycle_operate() {
       if(way == L1I->NUM_WAY){
         if(index_first_spec == 0 && num_instr_fetch_stall > 0){
           // Marker som fetch_stall
-          L1I->prefetch_line(element,true, 0, true, conditional_bm);
+          L1I->prefetch_line(element,true, 0, true, conditional_bm, wp_after_ftqflush);
           //Increment number of wrong path instructions prefetched
           num_prefetched_wrong_path++;
           if(conditional_bm){
-            num_prefetched_wrong_path_contitional++;
+            num_prefetched_wrong_path_conditional++;
           }
         }else{
           // Marker som ikke fetch_stall
-          L1I->prefetch_line(element,true, 0, false, false);
+          
+          L1I->prefetch_line(element,true, 0, false, false, wp_after_ftqflush);
+        }
+        if(wp_after_ftqflush){
+          num_prefetched_wrong_path_after_flush++;
         }
         recently_prefetched.push_back(element);
       }
@@ -77,6 +81,12 @@ void O3_CPU::prefetcher_cycle_operate() {
     }
 
     if(index_first_spec == 0 && num_instr_fetch_stall > 0){
+      if(num_instr_fetch_stall == 1){
+        //Gjør en bool variabel til true
+        //Det som prefetches mens denne er true vil bli markert som wp_after_ftqflush
+        //Når ptq flushes vil denne variabelen settes til false
+        wp_after_ftqflush = true;
+      }
       num_instr_fetch_stall--;
     }
 
