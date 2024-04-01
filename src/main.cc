@@ -241,6 +241,15 @@ void reset_cache_stats(uint32_t cpu, CACHE* cache)
   cache->pf_useless = 0;
   cache->pf_fill = 0;
 
+  //Reset the stats I have implemented 
+  cache->num_prefetched_useful_wrong_path = 0;
+  cache->num_prefetched_useless_wrong_path = 0;
+  cache->num_prefetched_useful_wrong_path_after_flush = 0;
+  cache->num_prefetched_useless_wrong_path_after_flush = 0;
+  cache->num_prefetched_useful_wrong_path_conditional = 0;
+  cache->num_prefetched_useless_wrong_path_conditional = 0;
+
+
   cache->total_miss_latency = 0;
 
   cache->RQ_ACCESS = 0;
@@ -280,6 +289,11 @@ void finish_warmup()
     ooo_cpu[i]->num_branch = 0;
     ooo_cpu[i]->branch_mispredictions = 0;
     ooo_cpu[i]->total_rob_occupancy_at_branch_mispredict = 0;
+
+    // Reset stats that I have added
+    ooo_cpu[i]->num_prefetched_wrong_path = 0;
+    ooo_cpu[i]->num_prefetched_wrong_path_after_flush = 0;
+    ooo_cpu[i]->num_prefetched_wrong_path_conditional = 0;
 
     for (uint32_t j = 0; j < 8; j++) {
       ooo_cpu[i]->total_branch_types[j] = 0;
