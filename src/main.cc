@@ -282,6 +282,7 @@ void finish_warmup()
     cout << "Warmup complete CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
     cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
+
     ooo_cpu[i]->begin_sim_cycle = ooo_cpu[i]->current_cycle;
     ooo_cpu[i]->begin_sim_instr = ooo_cpu[i]->num_retired;
 
