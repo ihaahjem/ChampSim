@@ -59,6 +59,8 @@ public:
   uint64_t ptq_init = true;
   std::pair<uint64_t, uint8_t> btb_input;
 
+  uint64_t compare_index = 0;
+
   //
   uint64_t num_entries_in_ftq = 0;
 
@@ -74,6 +76,7 @@ public:
   uint64_t num_prefetched_wrong_path_conditional = 0;
   uint64_t num_prefetched_wrong_path_after_flush = 0;
   bool wp_after_ftqflush = false;
+  uint64_t num_ptq_flushed = 0;
 
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;
@@ -151,6 +154,7 @@ public:
   void fill_prefetch_queue(uint64_t ip);
   void prefetch_past_mispredict();
   void new_cache_block_fetch();
+  void compare_queues();
 
 
   void check_dib();

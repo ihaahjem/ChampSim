@@ -495,6 +495,7 @@ int main(int argc, char** argv)
         cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
+        cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
@@ -523,7 +524,7 @@ int main(int argc, char** argv)
         }else{
           cout << " above 29 "   <<0  << endl;
         }
-
+        
 
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)

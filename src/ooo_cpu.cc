@@ -323,7 +323,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
 
-  FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
+  
 
 
   num_entries_in_ftq++;
@@ -333,9 +333,25 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     fill_prefetch_queue(arch_instr.ip);
   }
 
+  if(ptq_init && PTQ.size()){
+    compare_index = PTQ.size() - 1;
+  }else{
+    if(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
+      compare_index++;
+    }
+  }
+
   if(fetch_stall){
     ptq_init = false;
   }
+
+  FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
+
+  //Compare the queues
+  if(compare_index < PTQ.size() && FTQ.size() && PTQ.size()){
+    compare_queues();
+  }
+  
   
   instr_unique_id++;
 }
@@ -355,8 +371,6 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       }
     }
     current_block_address_ptq_back = block_address;
-
-
 }
 
 void O3_CPU::prefetch_past_mispredict(){
@@ -381,20 +395,26 @@ void O3_CPU::prefetch_past_mispredict(){
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch(){
-  if(FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0 && PTQ.size() && FTQ.size()){
-        PTQ.pop_front();
-        if(ptq_prefetch_entry){
-          ptq_prefetch_entry--;
-        }
+  if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
+    PTQ.pop_front();
+    if(ptq_prefetch_entry){
+      ptq_prefetch_entry--;
+    }
+    if(compare_index){
+      compare_index--;
+    }
   }
+}
 
+void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(FTQ.front() != PTQ.front() && PTQ.size() && FTQ.size()){
+  if(FTQ.back() != PTQ.at(compare_index) && PTQ.size() && FTQ.size()){
+    num_ptq_flushed++;
+    wp_after_ftqflush = false;
     // Flush the ptq
     PTQ.clear();
-
-    wp_after_ftqflush = false;
+    
 
     //Fill the ptq with entires from the ftq
     auto copy_ptq = PTQ;
@@ -403,6 +423,12 @@ void O3_CPU::new_cache_block_fetch(){
     }
     for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
       fill_prefetch_queue(*it);
+    }
+    
+    if(PTQ.size()){
+      compare_index = PTQ.size() - 1;
+    }else{
+      compare_index = 0;
     }
 
     ptq_init = true;
