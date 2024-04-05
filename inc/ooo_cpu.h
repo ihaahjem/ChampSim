@@ -92,10 +92,17 @@ public:
     uint64_t cycles_fetch_first_cb_after_prf = 0;
     bool start_counting_cycles = false;
     uint64_t index_start_count = 0;
-    uint64_t cycles_0_2 = 0;
-    uint64_t cycles_3_5 = 0;
-    uint64_t cycles_6_8 = 0;
-    uint64_t cycles_9_11 = 0;
+    uint64_t cycles_0 = 0;
+    uint64_t cycles_1 = 0;
+    uint64_t cycles_2 = 0;
+    uint64_t cycles_3 = 0;
+    uint64_t cycles_4 = 0;
+    uint64_t cycles_5 = 0;
+    uint64_t cycles_6 = 0;
+    uint64_t cycles_7 = 0;
+    uint64_t cycles_8 = 0;
+    uint64_t cycles_9 = 0;
+    uint64_t cycles_10 = 0;
     uint64_t cycles_above = 0;
     uint64_t percentage_tot = 0;
 

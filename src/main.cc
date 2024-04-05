@@ -512,18 +512,21 @@ int main(int argc, char** argv)
         cout << " Percentage cb num_21_25 " << (0.0+ooo_cpu[i]->num_cb_21_25)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_26_128 " << (0.0+ooo_cpu[i]->num_cb_26_128)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " AVG fetch first after cb " << (0.0+ooo_cpu[i]->cycles_fetch_first_cb_after_prf)/ooo_cpu[i]->num_fetch_stall << endl;
-        uint64_t tot_cycles= ooo_cpu[i]->cycles_0_2 + ooo_cpu[i]->cycles_3_5 + ooo_cpu[i]->cycles_6_8 + ooo_cpu[i]->cycles_9_11 + ooo_cpu[i]->cycles_above;
+        uint64_t tot_cycles= ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_5 + ooo_cpu[i]->cycles_6 + ooo_cpu[i]->cycles_7 + ooo_cpu[i]->cycles_8 + ooo_cpu[i]->cycles_9 + ooo_cpu[i]->cycles_10 + ooo_cpu[i]->cycles_above;
         if(tot_cycles){
-          cout << " cycles 0_2 " << (0.0+ooo_cpu[i]->cycles_0_2)/tot_cycles << endl;
-          cout << " cycles 3_5 " << (0.0+ooo_cpu[i]->cycles_3_5)/tot_cycles << endl;
-          cout << " cycles 6_8 " << (0.0+ooo_cpu[i]->cycles_6_8)/tot_cycles << endl;
-          cout << " cycles 9_11 " << (0.0+ooo_cpu[i]->cycles_9_11)/tot_cycles << endl;
-          cout << " above 11 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
+          cout << " cycles 0 " << (0.0+ooo_cpu[i]->cycles_0)/tot_cycles << endl;
+          cout << " cycles 1 " << (0.0+ooo_cpu[i]->cycles_1)/tot_cycles << endl;
+          cout << " cycles 2 " << (0.0+ooo_cpu[i]->cycles_2)/tot_cycles << endl;
+          cout << " cycles 3 " << (0.0+ooo_cpu[i]->cycles_3)/tot_cycles << endl;
+          cout << " cycles 4 " << (0.0+ooo_cpu[i]->cycles_4)/tot_cycles << endl;
+          cout << " cycles 5 " << (0.0+ooo_cpu[i]->cycles_5)/tot_cycles << endl;
+          cout << " cycles 6 " << (0.0+ooo_cpu[i]->cycles_6)/tot_cycles << endl;
+          cout << " cycles 7 " << (0.0+ooo_cpu[i]->cycles_7)/tot_cycles << endl;
+          cout << " cycles 8 " << (0.0+ooo_cpu[i]->cycles_8)/tot_cycles << endl;
+          cout << " cycles 9 " << (0.0+ooo_cpu[i]->cycles_9)/tot_cycles << endl;
+          cout << " cycles 10 " << (0.0+ooo_cpu[i]->cycles_10)/tot_cycles << endl;
+          cout << " above 10 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
         }else{
-          cout << " cycles 0_2 " <<0 << endl;
-          cout << " cycles 3_5 " <<0 << endl;
-          cout << " cycles 6_8 " <<0 << endl;
-          cout << " cycles 9_11 "<<0  << endl;
           cout << " above 11 "   <<0  << endl;
         }
 
