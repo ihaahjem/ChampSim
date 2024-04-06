@@ -411,7 +411,7 @@ void O3_CPU::new_cache_block_fetch(){
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(FTQ.front() != PTQ.front()){
+  if(FTQ.back() != PTQ.back()){
     num_ptq_flushed++;
     wp_after_ftqflush = false;
     // Flush the ptq
