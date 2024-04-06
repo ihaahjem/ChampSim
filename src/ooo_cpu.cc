@@ -333,10 +333,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     fill_prefetch_queue(arch_instr.ip);
   }
 
+  uint64_t block_address = ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
   if(ptq_init && PTQ.size()){
     compare_index = PTQ.size() - 1;
   }else{
-    if(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
+    if( block_address != FTQ.back()){
       compare_index++;
     }
   }
@@ -345,7 +346,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     ptq_init = false;
   }
 
-  FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
+  FTQ.push_back(block_address);
 
   //Compare the queues
   if(compare_index < PTQ.size() && FTQ.size() && PTQ.size()){
@@ -395,7 +396,8 @@ void O3_CPU::prefetch_past_mispredict(){
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch(){
-  if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
+  if(ptq_prefetch_entry && compare_index && PTQ.size()){  
+  // if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
     PTQ.pop_front();
     if(ptq_prefetch_entry){
       ptq_prefetch_entry--;
@@ -409,7 +411,7 @@ void O3_CPU::new_cache_block_fetch(){
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(FTQ.back() != PTQ.at(compare_index) && PTQ.size() && FTQ.size()){
+  if(FTQ.front() != PTQ.front()){
     num_ptq_flushed++;
     wp_after_ftqflush = false;
     // Flush the ptq
