@@ -399,11 +399,13 @@ void O3_CPU::new_cache_block_fetch(){
   if(ptq_prefetch_entry && compare_index && PTQ.size()){  
   // if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
     PTQ.pop_front();
-    if(ptq_prefetch_entry){
+    if(ptq_prefetch_entry > 0){
       ptq_prefetch_entry--;
     }
-    if(compare_index){
+    if(0 < compare_index <= PTQ.size()){
       compare_index--;
+    }else if(compare_index > PTQ.size()){
+      compare_index = PTQ.size() - 1;
     }
   }
 }
@@ -411,7 +413,6 @@ void O3_CPU::new_cache_block_fetch(){
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(compare_index < PTQ.size() && compare_index > -1){
     if(FTQ.back() != PTQ.at(compare_index)){
       num_ptq_flushed++;
       wp_after_ftqflush = false;
@@ -441,10 +442,6 @@ void O3_CPU::compare_queues(){
       current_block_address_ptq_back = 0;
     }
     // If the same then continue same as before
-  }else{
-    compare_index = PTQ.size() - 1;
-  }
-
 }
 
 void O3_CPU::check_dib()
