@@ -417,7 +417,7 @@ void O3_CPU::compare_queues(){
       wp_after_ftqflush = false;
       // Flush the ptq
       PTQ.clear();
-      
+
 
       //Fill the ptq with entires from the ftq
       auto copy_ptq = PTQ;
@@ -427,7 +427,7 @@ void O3_CPU::compare_queues(){
       for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
         fill_prefetch_queue(*it);
       }
-      
+
       if(PTQ.size()){
         compare_index = PTQ.size() - 1;
       }else{
@@ -441,6 +441,8 @@ void O3_CPU::compare_queues(){
       current_block_address_ptq_back = 0;
     }
     // If the same then continue same as before
+  }else{
+    compare_index = PTQ.size() - 1;
   }
 
 }
