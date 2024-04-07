@@ -411,35 +411,38 @@ void O3_CPU::new_cache_block_fetch(){
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(FTQ.back() != PTQ.at(compare_index) && compare_index < PTQ.size()){
-    num_ptq_flushed++;
-    wp_after_ftqflush = false;
-    // Flush the ptq
-    PTQ.clear();
-    
+  if(compare_index < PTQ.size()){
+    if(FTQ.back() != PTQ.at(compare_index)){
+      num_ptq_flushed++;
+      wp_after_ftqflush = false;
+      // Flush the ptq
+      PTQ.clear();
+      
 
-    //Fill the ptq with entires from the ftq
-    auto copy_ptq = PTQ;
-    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
-        copy_ptq.push_back(*it); 
-    }
-    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
-      fill_prefetch_queue(*it);
-    }
-    
-    if(PTQ.size()){
-      compare_index = PTQ.size() - 1;
-    }else{
-      compare_index = 0;
-    }
+      //Fill the ptq with entires from the ftq
+      auto copy_ptq = PTQ;
+      for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
+          copy_ptq.push_back(*it); 
+      }
+      for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
+        fill_prefetch_queue(*it);
+      }
+      
+      if(PTQ.size()){
+        compare_index = PTQ.size() - 1;
+      }else{
+        compare_index = 0;
+      }
 
-    ptq_init = true;
-    ptq_prefetch_entry = 0;
-    instrs_to_speculate_this_cycle = 0;
-    has_speculated = 0;
-    current_block_address_ptq_back = 0;
+      ptq_init = true;
+      ptq_prefetch_entry = 0;
+      instrs_to_speculate_this_cycle = 0;
+      has_speculated = 0;
+      current_block_address_ptq_back = 0;
+    }
+    // If the same then continue same as before
   }
-  // If the same then continue same as before
+
 }
 
 void O3_CPU::check_dib()
