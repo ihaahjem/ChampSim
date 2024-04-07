@@ -399,10 +399,10 @@ void O3_CPU::new_cache_block_fetch(){
   if(ptq_prefetch_entry && compare_index && PTQ.size()){  
   // if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
     PTQ.pop_front();
-    if(ptq_prefetch_entry > 0){
+    // if(ptq_prefetch_entry > 0){
       ptq_prefetch_entry--;
-    }
-    if(0 < compare_index <= PTQ.size()){
+    // }
+    if(compare_index <= PTQ.size()){
       compare_index--;
     }else{
       compare_index = PTQ.size() - 1;
