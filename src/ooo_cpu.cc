@@ -337,7 +337,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   if(ptq_init && PTQ.size()){
     compare_index = PTQ.size() - 1;
   }else{
-    if( block_address != FTQ.back()){
+    if( block_address != FTQ.back() && compare_index < PTQ.size() - 1){
       compare_index++;
     }
   }
