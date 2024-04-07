@@ -336,10 +336,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   uint64_t block_address = ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
   if(ptq_init && PTQ.size()){
     compare_index = PTQ.size() - 1;
-  }else{
-    if( block_address != FTQ.back() && compare_index < (PTQ.size() - 1)){
+  }else if( block_address != FTQ.back() && compare_index < (PTQ.size() - 1)){
       compare_index++;
-    }
+  }else{
+    compare_index = 0;
   }
 
   if(fetch_stall){
@@ -404,7 +404,7 @@ void O3_CPU::new_cache_block_fetch(){
     }
     if(0 < compare_index <= PTQ.size()){
       compare_index--;
-    }else if(compare_index > PTQ.size()){
+    }else{
       compare_index = PTQ.size() - 1;
     }
   }
@@ -429,7 +429,7 @@ void O3_CPU::compare_queues(){
         fill_prefetch_queue(*it);
       }
 
-      if(PTQ.size()){
+      if(PTQ.size() > 0){
         compare_index = PTQ.size() - 1;
       }else{
         compare_index = 0;
