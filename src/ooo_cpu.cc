@@ -337,7 +337,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   if(ptq_init && PTQ.size()){
     compare_index = PTQ.size() - 1;
   }else{
-    if( block_address != FTQ.back() && compare_index < PTQ.size() - 1){
+    if( block_address != FTQ.back() && compare_index < (PTQ.size() - 1)){
       compare_index++;
     }
   }
@@ -411,7 +411,7 @@ void O3_CPU::new_cache_block_fetch(){
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-  if(compare_index < PTQ.size()){
+  if(compare_index < PTQ.size() && compare_index > -1){
     if(FTQ.back() != PTQ.at(compare_index)){
       num_ptq_flushed++;
       wp_after_ftqflush = false;
