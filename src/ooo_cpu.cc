@@ -396,7 +396,7 @@ void O3_CPU::prefetch_past_mispredict(){
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch(){
-  if(ptq_prefetch_entry && compare_index && PTQ.size()){  
+  if(ptq_prefetch_entry > 0 && compare_index > 0 && PTQ.size() > 0){  
   // if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
     PTQ.pop_front();
     // if(ptq_prefetch_entry > 0){
