@@ -239,7 +239,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     if (mshr_entry->type == PREFETCH && handle_pkt.type != PREFETCH) {
       // Mark the prefetch as useful
-      if (mshr_entry->pf_origin_level == fill_level)
+      if (mshr_entry->pf_origin_level == fill_level){
         pf_useful++;
         if(handle_pkt.fetch_stall){
           num_prefetched_useful_wrong_path++;
@@ -250,7 +250,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         if(handle_pkt.wp_after_ftqflush){
           num_prefetched_useful_wrong_path_after_flush++;
         }
-
+      }
       uint64_t prior_event_cycle = mshr_entry->event_cycle;
       *mshr_entry = handle_pkt;
 
