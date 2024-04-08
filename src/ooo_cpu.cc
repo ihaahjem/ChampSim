@@ -373,10 +373,6 @@ void O3_CPU::prefetch_past_mispredict(){
 
     // Fill prefetch queue with the speculation
     fill_prefetch_queue(btb_result.first);
-    
-    instrs_to_speculate_this_cycle--;
-
-    num_empty_ftq_entries--;
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
