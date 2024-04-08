@@ -312,8 +312,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
 
+  uint64_t block_address = (arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE;
+
   if(cb_until_time_start){
-    if(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
+    if(block_address != FTQ.back()){
       cb_until_time_start--;
     }
     if(cb_until_time_start == 0){
@@ -333,13 +335,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     fill_prefetch_queue(arch_instr.ip);
   }
 
-  uint64_t block_address = ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
-  if(ptq_init && PTQ.size()){
-    compare_index = PTQ.size() - 1;
-  }else if( block_address != FTQ.back() && compare_index < (PTQ.size() - 1)){
-      compare_index++;
-  }else{
-    compare_index = 0;
+  if(ptq_init){
+  compare_index = PTQ.size() - 1;
+  }else if((compare_index < (PTQ.size() - 1)) && (FTQ.back() != block_address) && (PTQ.size() > 1)){
+    compare_index++;
   }
 
   if(fetch_stall){
@@ -395,53 +394,48 @@ void O3_CPU::prefetch_past_mispredict(){
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
-void O3_CPU::new_cache_block_fetch(){
-  if(ptq_prefetch_entry > 0 && compare_index > 0 && PTQ.size() > 0){  
-  // if((FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) && PTQ.size() && FTQ.size()){
-    PTQ.pop_front();
-    // if(ptq_prefetch_entry > 0){
-      ptq_prefetch_entry--;
-    // }
-    if(compare_index <= PTQ.size()){
-      compare_index--;
-    }else{
-      compare_index = PTQ.size() - 1;
-    }
+void O3_CPU::new_cache_block_fetch() {
+  // Check if there are elements in the queue and both prefetch and compare indices are set.
+  if (!PTQ.empty() && ptq_prefetch_entry && compare_index) {
+    PTQ.pop_front(); // Remove the front element of the queue.
+
+    // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
+    ptq_prefetch_entry = (ptq_prefetch_entry <= PTQ.size()) ? ptq_prefetch_entry - 1 : 0;
+    compare_index = (compare_index <= PTQ.size()) ? compare_index - 1 : PTQ.size() - 1;
   }
 }
 
 void O3_CPU::compare_queues(){
   //Compare heads if FTQ.size() > 0
   //If the heads are different then flush the PTQ
-    if(FTQ.back() != PTQ.at(compare_index)){
-      num_ptq_flushed++;
-      wp_after_ftqflush = false;
-      // Flush the ptq
-      PTQ.clear();
-
-
-      //Fill the ptq with entires from the ftq
-      auto copy_ptq = PTQ;
-      for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
-          copy_ptq.push_back(*it); 
-      }
-      for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
-        fill_prefetch_queue(*it);
-      }
-
-      if(PTQ.size() > 0){
-        compare_index = PTQ.size() - 1;
-      }else{
-        compare_index = 0;
-      }
-
-      ptq_init = true;
-      ptq_prefetch_entry = 0;
-      instrs_to_speculate_this_cycle = 0;
-      has_speculated = 0;
-      current_block_address_ptq_back = 0;
+  if(FTQ.back() != PTQ.at(compare_index) && !PTQ.empty()){
+    num_ptq_flushed++;
+    wp_after_ftqflush = false;
+    // Flush the ptq
+    PTQ.clear();
+    //Fill the ptq with entires from the ftq
+    auto copy_ptq = PTQ;
+    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
+        copy_ptq.push_back(*it); 
     }
-    // If the same then continue same as before
+    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
+      fill_prefetch_queue(*it);
+    }
+
+    if (!PTQ.empty()) {
+        compare_index = PTQ.size() - 1;
+        current_block_address_ptq_back = PTQ.back();
+    } else {
+        compare_index = 0;
+        current_block_address_ptq_back = 0;
+    }
+
+    // Reset the necessary state variables.
+    ptq_init = true;
+    ptq_prefetch_entry = 0;
+    instrs_to_speculate_this_cycle = 0;
+    has_speculated = 0;
+  }
 }
 
 void O3_CPU::check_dib()
@@ -529,19 +523,19 @@ void O3_CPU::fetch_instruction()
     fetch_stall = 0;
     fetch_resume_cycle = 0;
 
-          // Get stats for number of cb added during fetch stall
-    if(num_cb_to_PTQ_fetch_stall < 6){
-      num_cb_0_5++;
-    }else if(num_cb_to_PTQ_fetch_stall > 5 && num_cb_to_PTQ_fetch_stall < 11){
-      num_cb_6_10++;
-    }else if(num_cb_to_PTQ_fetch_stall > 10 && num_cb_to_PTQ_fetch_stall < 16){
-      num_cb_11_15++;
-    }else if(num_cb_to_PTQ_fetch_stall > 15 && num_cb_to_PTQ_fetch_stall < 21){
-      num_cb_16_20++;
-    }else if(num_cb_to_PTQ_fetch_stall > 20 && num_cb_to_PTQ_fetch_stall < 26){
-      num_cb_21_25++;
-    }else if(num_cb_to_PTQ_fetch_stall > 25){
-      num_cb_26_128++;
+    // Get stats for number of cache blocks added during fetch stall
+    if (num_cb_to_PTQ_fetch_stall < 6) {
+        num_cb_0_5++;
+    } else if (num_cb_to_PTQ_fetch_stall < 11) { 
+        num_cb_6_10++;
+    } else if (num_cb_to_PTQ_fetch_stall < 16) { 
+        num_cb_11_15++;
+    } else if (num_cb_to_PTQ_fetch_stall < 21) { 
+        num_cb_16_20++;
+    } else if (num_cb_to_PTQ_fetch_stall < 26) { 
+        num_cb_21_25++;
+    } else { 
+        num_cb_26_128++;
     }
     cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
