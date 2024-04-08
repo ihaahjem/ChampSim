@@ -282,7 +282,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       if (arch_instr.branch_taken == 1) {
         instrs_to_read_this_cycle = 0;
       }
-      instrs_to_speculate_this_cycle = 0;
 
       if(!ptq_init){
         //Set instrs to speculate this cycle
@@ -325,33 +324,32 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
 
-  
-
-
   num_entries_in_ftq++;
     
-  // Add to prefetch_queue
-  if(PTQ.size() < MAX_PTQ_ENTRIES && ptq_init){
+  // Attempt to fill the PTQ if there's room and ptq_init is true.
+  if (PTQ.size() < MAX_PTQ_ENTRIES && ptq_init) {
     fill_prefetch_queue(arch_instr.ip);
   }
 
-  if(ptq_init){
-  compare_index = PTQ.size() - 1;
-  }else if((compare_index < (PTQ.size() - 1)) && (FTQ.back() != block_address) && (PTQ.size() > 1)){
-    compare_index++;
+  // Update compare_index based on ptq_init status and conditions.
+  if (ptq_init) {
+    compare_index = PTQ.size() - 1; // Always set to the last entry if ptq_init.
+  } else if (compare_index < PTQ.size() - 1 && FTQ.back() != block_address && PTQ.size() > 1) {
+    compare_index++; // Only increment compare_index if it's within bounds and a new cache block is added to FTQ
   }
 
-  if(fetch_stall){
+  // Handle fetch stall: reset ptq_init, fill PTQ with the BTB prediction, and update compare_index.
+  if (fetch_stall) {
     ptq_init = false;
   }
 
+  // Always add the current block address to the FTQ.
   FTQ.push_back(block_address);
 
-  //Compare the queues
-  if(compare_index < PTQ.size() && FTQ.size() && PTQ.size()){
+  // Perform queue comparison if conditions are met.
+  if (compare_index >= 0 && compare_index < PTQ.size() && !FTQ.empty() && !PTQ.empty()) {
     compare_queues();
   }
-  
   
   instr_unique_id++;
 }
@@ -373,7 +371,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     current_block_address_ptq_back = block_address;
 }
 
-void O3_CPU::prefetch_past_mispredict(){
+void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
 
@@ -387,10 +385,6 @@ void O3_CPU::prefetch_past_mispredict(){
 
     // Fill prefetch queue with the speculation
     fill_prefetch_queue(btb_result.first);
-    
-    instrs_to_speculate_this_cycle--;
-
-    num_empty_ftq_entries--;
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
@@ -401,41 +395,43 @@ void O3_CPU::new_cache_block_fetch() {
     PTQ.pop_front(); // Remove the front element of the queue.
 
     // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
-    ptq_prefetch_entry = (ptq_prefetch_entry <= PTQ.size()) ? ptq_prefetch_entry - 1 : 0;
-    compare_index = (compare_index <= PTQ.size()) ? compare_index - 1 : 0;
+    ptq_prefetch_entry = (ptq_prefetch_entry > 0 && ptq_prefetch_entry <= PTQ.size()) ? ptq_prefetch_entry - 1 : 0;
+    compare_index = (compare_index > 0 && compare_index <= PTQ.size()) ? compare_index - 1 : 0;
   }
 }
 
 void O3_CPU::compare_queues(){
-  //Compare heads if FTQ.size() > 0
-  //If the heads are different then flush the PTQ
-  if(FTQ.back() != PTQ.at(compare_index) && !PTQ.empty() && !FTQ.empty()){
+  //Compare back of FTQ to PTQ
+  if(FTQ.back() != PTQ[compare_index]){
+    // Increment number of ptq flushes
     num_ptq_flushed++;
-    wp_after_ftqflush = false;
-    // Flush the ptq
-    PTQ.clear();
-    //Fill the ptq with entires from the ftq
-    auto copy_ptq = PTQ;
-    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
-        copy_ptq.push_back(*it); 
-    }
-    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
-      fill_prefetch_queue(*it);
-    }
-
-    if (!PTQ.empty()) {
-        compare_index = PTQ.size() - 1;
-        current_block_address_ptq_back = PTQ.back();
-    } else {
-        compare_index = 0;
-        current_block_address_ptq_back = 0;
-    }
 
     // Reset the necessary state variables.
     ptq_init = true;
     ptq_prefetch_entry = 0;
     instrs_to_speculate_this_cycle = 0;
     has_speculated = 0;
+    wp_after_ftqflush = false;
+    current_block_address_ptq_back = 0;
+
+    // Flush the ptq
+    PTQ.clear();
+
+    //Fill the ptq with entires from the ftq
+    auto copy_ptq = PTQ;
+    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
+      copy_ptq.push_back(*it); 
+    }
+    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
+      fill_prefetch_queue(*it);
+    }
+
+    // Ensure compare_index is correct
+    if (!PTQ.empty()) {
+      compare_index = PTQ.size() - 1;
+    } else {
+      compare_index = 0;
+    }
   }
 }
 

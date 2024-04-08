@@ -40,7 +40,7 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
 
 void O3_CPU::prefetcher_cycle_operate() {
   // Perform prefetching of what is in the prefetch queue every cycle.
-  if (PTQ.size()) {
+  if (!PTQ.empty()) {
     uint64_t element = PTQ[ptq_prefetch_entry];
     // // Check if it is recently prefetched
     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), element);
@@ -52,39 +52,35 @@ void O3_CPU::prefetcher_cycle_operate() {
       uint32_t set = L1I->get_set(element);
       uint32_t way = L1I->get_way(element,set);
       if(way == L1I->NUM_WAY){
-        if(index_first_spec == 0 && num_instr_fetch_stall > 0){
-          // Marker som fetch_stall
-          L1I->prefetch_line(element,true, 0, true, conditional_bm, wp_after_ftqflush);
-          //Increment number of wrong path instructions prefetched
+        bool is_wrong_path = (index_first_spec == 0 && num_instr_fetch_stall > 0);
+        L1I->prefetch_line(element, true, 0, is_wrong_path, conditional_bm, wp_after_ftqflush);
+
+        // Update wrong path counters.
+        if (is_wrong_path) {
           num_prefetched_wrong_path++;
-          if(conditional_bm){
+          if (conditional_bm) {
             num_prefetched_wrong_path_conditional++;
           }
-        }else{
-          // Marker som ikke fetch_stall
-          
-          L1I->prefetch_line(element,true, 0, false, false, wp_after_ftqflush);
         }
-        if(wp_after_ftqflush){
+        if (wp_after_ftqflush) {
           num_prefetched_wrong_path_after_flush++;
         }
-        recently_prefetched.push_back(element);
       }
       
-      if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+      // Update recently prefetched queue.
+      recently_prefetched.push_back(element);
+      if (recently_prefetched.size() > MAX_RECENTLY_PREFETCHED_ENTRIES) {
         recently_prefetched.pop_front();
       }
     }
     
-    if(ptq_prefetch_entry < PTQ.size() - 1){
+    // Update prefetch entry index for next cycle.
+    if (ptq_prefetch_entry < PTQ.size() - 1) {
       ptq_prefetch_entry++;
     }
 
     if(index_first_spec == 0 && num_instr_fetch_stall > 0){
       if(num_instr_fetch_stall == 1){
-        //Gjør en bool variabel til true
-        //Det som prefetches mens denne er true vil bli markert som wp_after_ftqflush
-        //Når ptq flushes vil denne variabelen settes til false
         wp_after_ftqflush = true;
       }
       num_instr_fetch_stall--;

@@ -152,7 +152,7 @@ public:
   void init_instruction(ooo_model_instr instr);
   // PTQ
   void fill_prefetch_queue(uint64_t ip);
-  void prefetch_past_mispredict();
+  void fill_ptq_speculatively();
   void new_cache_block_fetch();
   void compare_queues();
 
