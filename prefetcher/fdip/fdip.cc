@@ -41,7 +41,7 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
 void O3_CPU::prefetcher_cycle_operate() {
   // Perform prefetching of what is in the prefetch queue every cycle.
   if (PTQ.size()) {
-    uint64_t element = PTQ.at(ptq_prefetch_entry);
+    uint64_t element = PTQ[ptq_prefetch_entry];
     // // Check if it is recently prefetched
     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), element);
     if(it == recently_prefetched.end()){
