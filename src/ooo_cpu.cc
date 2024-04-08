@@ -396,12 +396,13 @@ void O3_CPU::prefetch_past_mispredict(){
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch() {
   // Check if there are elements in the queue and both prefetch and compare indices are set.
+  // if (!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq){
   if (!PTQ.empty() && ptq_prefetch_entry && compare_index) {
     PTQ.pop_front(); // Remove the front element of the queue.
 
     // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
     ptq_prefetch_entry = (ptq_prefetch_entry <= PTQ.size()) ? ptq_prefetch_entry - 1 : 0;
-    compare_index = (compare_index <= PTQ.size()) ? compare_index - 1 : PTQ.size() - 1;
+    compare_index = (compare_index <= PTQ.size()) ? compare_index - 1 : 0;
   }
 }
 
