@@ -56,7 +56,7 @@ public:
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
   uint64_t current_block_address_ptq_back = 0;
-  uint64_t ptq_init = true;
+  bool     ptq_init = false; // True when the PTQ has been initialized (true until a bm occurs)
   std::pair<uint64_t, uint8_t> btb_input;
 
   uint64_t compare_index = 0;
@@ -77,6 +77,7 @@ public:
   uint64_t num_prefetched_wrong_path_after_flush = 0;
   bool wp_after_ftqflush = false;
   uint64_t num_ptq_flushed = 0;
+  
 
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;
@@ -89,6 +90,14 @@ public:
       uint64_t num_cb_16_20 = 0;
       uint64_t num_cb_21_25 = 0;
       uint64_t num_cb_26_128 = 0;
+
+    uint64_t num_addr_to_PTQ_fetch_stall = 0;
+      uint64_t num_addr_0_5 = 0;
+      uint64_t num_addr_6_11 = 0;
+      uint64_t num_addr_12_17 = 0;
+      uint64_t num_addr_18_23 = 0;
+      uint64_t num_addr_24_29 = 0;
+      uint64_t num_addr_above = 0;
 
     //time to fetch after bm resolved that has not been prefetched
     uint64_t cb_until_time_start = 0;

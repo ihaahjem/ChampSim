@@ -442,12 +442,7 @@ int main(int argc, char** argv)
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      // Fill prefetch queue speculatively when fetching is stalled
-      // if(ooo_cpu[i]->instrs_to_speculate_this_cycle == 0){
-      //   ooo_cpu[i]->instrs_to_speculate_this_cycle = std::min<std::size_t>(ooo_cpu[i]->FETCH_WIDTH, ooo_cpu[i]->num_empty_ftq_entries); 
-      // }
-
-      while (!ooo_cpu[i]->ptq_init && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
+      while (ooo_cpu[i]->ptq_init && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
         ooo_cpu[i]->has_speculated = 1;
 
@@ -507,6 +502,7 @@ int main(int argc, char** argv)
         cout << " Number of block_addresses prefetched during on wrong path after ftq flush " << ooo_cpu[i]->num_prefetched_wrong_path_after_flush << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
         cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
+
         cout << " Percentage cb num_0_5 " << (0.0+ooo_cpu[i]->num_cb_0_5)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_6_10 " << (0.0+ooo_cpu[i]->num_cb_6_10)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_11_15 " << (0.0+ooo_cpu[i]->num_cb_11_15)/ooo_cpu[i]->num_fetch_stall << endl;
@@ -514,6 +510,14 @@ int main(int argc, char** argv)
         cout << " Percentage cb num_21_25 " << (0.0+ooo_cpu[i]->num_cb_21_25)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " Percentage cb num_26_128 " << (0.0+ooo_cpu[i]->num_cb_26_128)/ooo_cpu[i]->num_fetch_stall << endl;
         cout << " AVG fetch first after cb " << (0.0+ooo_cpu[i]->cycles_fetch_first_cb_after_prf)/ooo_cpu[i]->num_fetch_stall << endl;
+
+        cout << " Percentage addr num_0_5 " << (0.0+ooo_cpu[i]->num_addr_0_5)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " Percentage addr num_6_11 " << (0.0+ooo_cpu[i]->num_addr_6_11)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " Percentage addr num_12_17 " << (0.0+ooo_cpu[i]->num_addr_12_17)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " Percentage addr num_18_23 " << (0.0+ooo_cpu[i]->num_addr_18_23)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " Percentage addr num_24_29 " << (0.0+ooo_cpu[i]->num_addr_24_29)/ooo_cpu[i]->num_fetch_stall << endl;
+        cout << " Percentage addr num_above " << (0.0+ooo_cpu[i]->num_addr_above)/ooo_cpu[i]->num_fetch_stall << endl;
+
         uint64_t tot_cycles= ooo_cpu[i]->cycles_0_5 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
         if(tot_cycles){
           cout << " cycles 0_5 " << (0.0+ooo_cpu[i]->cycles_0_5)/tot_cycles << endl;
@@ -522,8 +526,6 @@ int main(int argc, char** argv)
           cout << " cycles 18_23 " << (0.0+ooo_cpu[i]->cycles_18_23)/tot_cycles << endl;
           cout << " cycles 24_29 " << (0.0+ooo_cpu[i]->cycles_24_29)/tot_cycles << endl;
           cout << " above 29 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
-        }else{
-          cout << " above 29 "   <<0  << endl;
         }
         
 

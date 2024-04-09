@@ -19,13 +19,14 @@ void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
 
+  // For stats --start--
   if(fetch_stall){
     num_cycles_fetch_stall++;
   }
-
   if(start_counting_cycles){
     cycles_fetch_first_cb_after_prf++;
   }
+  // For stats --end--
 
   retire_rob();                    // retire
   complete_inflight_instruction(); // finalize execution
@@ -235,15 +236,14 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        if(ptq_init){
+        if(!ptq_init){
           if(predicted_branch_target == 0){
             btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
           }else{
             btb_input = std::make_pair(predicted_branch_target, always_taken);
-          }
-          num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
+          } 
         }
-
+        
         if(arch_instr.branch_taken == 0){
           instrs_to_speculate_this_cycle = 0;
         }else{
@@ -254,11 +254,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
 
+
+        // For stats --start--
         cycles_fetch_first_cb_after_prf = 0;
         start_counting_cycles = false;
         index_start_count = 0;
 
-        // Stats
         num_fetch_stall++;
         num_ftq_flush++;
         conditional_bm = false;
@@ -274,6 +275,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         num_entries_in_ftq_when_flush += num_entries_in_ftq;
         index_first_spec = PTQ.size();
         num_instr_fetch_stall = instrs_to_speculate_this_cycle;
+        // For stats --end--
       }
     } else {
       conditional_bm = false;
@@ -283,13 +285,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         instrs_to_read_this_cycle = 0;
       }
 
-      if(!ptq_init){
+      if(ptq_init){
         //Set instrs to speculate this cycle
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
       }
-
     }
-
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
     impl_last_branch_result(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
   }
@@ -313,6 +313,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   uint64_t block_address = (arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE;
 
+  // For stats --start--
   if(cb_until_time_start){
     if(block_address != FTQ.back()){
       cb_until_time_start--;
@@ -323,16 +324,19 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       index_start_count = FTQ.size();
     }
   }
+  // For stats --end-- 
+   
 
+  num_empty_ftq_entries = IFETCH_BUFFER.size() - num_entries_in_ftq;
   num_entries_in_ftq++;
     
-  // Attempt to fill the PTQ if there's room and ptq_init is true.
-  if (PTQ.size() < MAX_PTQ_ENTRIES && ptq_init) {
+  // Attempt to fill the PTQ if there's room and ptq_init is false.
+  if (PTQ.size() < MAX_PTQ_ENTRIES && !ptq_init) {
     fill_prefetch_queue(arch_instr.ip);
   }
 
   // Update compare_index based on ptq_init status and conditions.
-  if (ptq_init) {
+  if (!ptq_init) {
     compare_index = PTQ.size() - 1; // Always set to the last entry if ptq_init.
   } else if (compare_index < PTQ.size() - 1 && FTQ.back() != block_address && PTQ.size() > 1) {
     compare_index++; // Only increment compare_index if it's within bounds and a new cache block is added to FTQ
@@ -340,7 +344,13 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   // Handle fetch stall: reset ptq_init, fill PTQ with the BTB prediction, and update compare_index.
   if (fetch_stall) {
-    ptq_init = false;
+    if(!ptq_init){
+      fill_prefetch_queue(btb_input.first);
+      instrs_to_speculate_this_cycle--;
+      num_empty_ftq_entries--;
+      compare_index = PTQ.size() - 1;
+    }
+    ptq_init = true;
   }
 
   // Always add the current block address to the FTQ.
@@ -363,12 +373,16 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       PTQ.push_back(block_address);
       if(fetch_stall == 1){
         num_cb_to_PTQ_fetch_stall++;
-      }else if(!ptq_init){
+      }else if(ptq_init){
         //increment num_cb to PTQ wp
         num_instr_not_fetch_stall++;
       }
     }
     current_block_address_ptq_back = block_address;
+
+    if(fetch_stall == 1){
+      num_addr_to_PTQ_fetch_stall++;
+    }
 }
 
 void O3_CPU::fill_ptq_speculatively(){
@@ -389,8 +403,8 @@ void O3_CPU::fill_ptq_speculatively(){
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch() {
-  // Check if there are elements in the queue and both prefetch and compare indices are set.
-  // if (!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq){
+  // Check if there are elements in the queue and both prefetch and compare indices are above 0.
+  // If they are both above zero it means that the element has been prefetched and compared.
   if (!PTQ.empty() && ptq_prefetch_entry && compare_index) {
     PTQ.pop_front(); // Remove the front element of the queue.
 
@@ -403,19 +417,20 @@ void O3_CPU::new_cache_block_fetch() {
 void O3_CPU::compare_queues(){
   //Compare back of FTQ to PTQ
   if(FTQ.back() != PTQ[compare_index]){
+    
     // Increment number of ptq flushes
     num_ptq_flushed++;
 
+    // Flush the ptq
+    PTQ.clear();
+
     // Reset the necessary state variables.
-    ptq_init = true;
+    ptq_init = false;
     ptq_prefetch_entry = 0;
     instrs_to_speculate_this_cycle = 0;
     has_speculated = 0;
     wp_after_ftqflush = false;
     current_block_address_ptq_back = 0;
-
-    // Flush the ptq
-    PTQ.clear();
 
     //Fill the ptq with entires from the ftq
     auto copy_ptq = PTQ;
@@ -424,13 +439,6 @@ void O3_CPU::compare_queues(){
     }
     for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
       fill_prefetch_queue(*it);
-    }
-
-    // Ensure compare_index is correct
-    if (!PTQ.empty()) {
-      compare_index = PTQ.size() - 1;
-    } else {
-      compare_index = 0;
     }
   }
 }
@@ -537,6 +545,23 @@ void O3_CPU::fetch_instruction()
     cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
     num_cb_to_PTQ_fetch_stall = 0;
+
+    if (num_addr_to_PTQ_fetch_stall < 6) {
+        num_addr_0_5++;
+    } else if (num_addr_to_PTQ_fetch_stall < 12) { 
+        num_addr_6_11++;
+    } else if (num_addr_to_PTQ_fetch_stall < 18) { 
+        num_addr_12_17++;
+    } else if (num_addr_to_PTQ_fetch_stall < 24) { 
+        num_addr_18_23++;
+    } else if (num_addr_to_PTQ_fetch_stall < 29) { 
+        num_addr_24_29++;
+    } else { 
+        num_addr_above++;
+    }
+
+    num_addr_to_PTQ_fetch_stall = 0;
+    
   }
 
 
