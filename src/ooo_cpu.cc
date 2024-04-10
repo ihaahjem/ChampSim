@@ -367,7 +367,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
 }
 
-void O3_CPU::prefetch_past_mispredict(){
+void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
 
