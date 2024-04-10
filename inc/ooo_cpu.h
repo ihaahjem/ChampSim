@@ -52,7 +52,6 @@ public:
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
   uint64_t instrs_to_speculate_this_cycle = 0;
   uint64_t num_empty_ftq_entries = 0;
-  uint64_t has_speculated = 0;
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
   std::pair<uint64_t, uint8_t> btb_input;
@@ -71,6 +70,7 @@ public:
   uint64_t num_cycles_fetch_stall = 0;
   bool conditional_bm = false;
   uint64_t num_prefetched_wrong_path_contitional = 0;
+  uint64_t num_ptq_flushed = 0;
 
     // What did we prefetcch on wrong path and how many of them were useful
     uint64_t index_first_spec = 0;

@@ -319,12 +319,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
 
   num_entries_in_ftq++;
-
-  if(has_speculated){
-    PTQ.clear();
-    ptq_prefetch_entry = 0;
-    has_speculated = 0;
-  }
     
   // Add to prefetch_queue
   if(PTQ.size() < MAX_PTQ_ENTRIES){
@@ -481,6 +475,11 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
+
+    // Clear the PTQ
+    PTQ.clear();
+    num_ptq_flushed++;
+    ptq_prefetch_entry = 0;
 
           // Get stats for number of cb added during fetch stall
     if(num_cb_to_PTQ_fetch_stall < 6){

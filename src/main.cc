@@ -428,7 +428,6 @@ int main(int argc, char** argv)
 
       while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
-        ooo_cpu[i]->has_speculated = 1;
       }
 
       // heartbeat information
@@ -472,6 +471,7 @@ int main(int argc, char** argv)
         cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
+        cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
@@ -495,15 +495,6 @@ int main(int argc, char** argv)
           cout << " cycles 6_8 " << (0.0+ooo_cpu[i]->cycles_6_8)/tot_cycles << endl;
           cout << " cycles 9_11 " << (0.0+ooo_cpu[i]->cycles_9_11)/tot_cycles << endl;
           cout << " above 11 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
-        }else{
-          cout << " cycles 0_2 " <<0 << endl;
-          cout << " cycles 3_5 " <<0 << endl;
-          cout << " cycles 6_8 " <<0 << endl;
-          cout << " cycles 9_11 "<<0  << endl;
-          cout << " above 11 "   <<0  << endl;
-        }
-
-
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
