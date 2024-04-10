@@ -442,12 +442,10 @@ int main(int argc, char** argv)
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      while (ooo_cpu[i]->ptq_init && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
+      while (ooo_cpu[i]->ptq_init && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
-        ooo_cpu[i]->has_speculated = 1;
-
         ooo_cpu[i]->instrs_to_speculate_this_cycle--;
-        ooo_cpu[i]->num_empty_ftq_entries--;
+        // ooo_cpu[i]->num_empty_ftq_entries--;
       }
 
       // heartbeat information

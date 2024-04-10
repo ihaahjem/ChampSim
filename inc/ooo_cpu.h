@@ -52,7 +52,6 @@ public:
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
   uint64_t instrs_to_speculate_this_cycle = 0;
   uint64_t num_empty_ftq_entries = 0;
-  uint64_t has_speculated = 0;
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
   uint64_t current_block_address_ptq_back = 0;
