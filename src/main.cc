@@ -495,7 +495,7 @@ int main(int argc, char** argv)
           cout << " cycles 6_8 " << (0.0+ooo_cpu[i]->cycles_6_8)/tot_cycles << endl;
           cout << " cycles 9_11 " << (0.0+ooo_cpu[i]->cycles_9_11)/tot_cycles << endl;
           cout << " above 11 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
-
+        }
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
       }
