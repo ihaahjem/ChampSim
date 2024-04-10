@@ -447,7 +447,7 @@ int main(int argc, char** argv)
       //   ooo_cpu[i]->instrs_to_speculate_this_cycle = std::min<std::size_t>(ooo_cpu[i]->FETCH_WIDTH, ooo_cpu[i]->num_empty_ftq_entries); 
       // }
 
-      while (ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
+      while ( ooo_cpu[i]->ptq_init && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_empty_ftq_entries > 0){
         ooo_cpu[i]->prefetch_past_mispredict();
         ooo_cpu[i]->has_speculated = 1;
         ooo_cpu[i]->instrs_to_speculate_this_cycle--;
@@ -494,7 +494,8 @@ int main(int argc, char** argv)
         cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
         cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
-
+        
+        cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;

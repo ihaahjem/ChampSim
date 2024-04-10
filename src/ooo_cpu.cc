@@ -235,7 +235,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        if(ptq_init){
+        if(!ptq_init){
           if(predicted_branch_target == 0){
             btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
           }else{
@@ -284,7 +284,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       }
       instrs_to_speculate_this_cycle = 0;
 
-      if(!ptq_init){
+      if(ptq_init){
         //Set instrs to speculate this cycle
         instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
       }
@@ -329,12 +329,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   num_entries_in_ftq++;
     
   // Add to prefetch_queue
-  if(PTQ.size() < MAX_PTQ_ENTRIES && ptq_init){
+  if(PTQ.size() < MAX_PTQ_ENTRIES && !ptq_init){
     fill_prefetch_queue(arch_instr.ip);
   }
 
   if(fetch_stall){
-    ptq_init = false;
+    ptq_init = true;
   }
   
   instr_unique_id++;
@@ -349,7 +349,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       PTQ.push_back(block_address);
       if(fetch_stall == 1){
         num_cb_to_PTQ_fetch_stall++;
-      }else if(!ptq_init){
+      }else if(ptq_init){
         //increment num_cb to PTQ wp
         num_instr_not_fetch_stall++;
       }
@@ -377,19 +377,22 @@ void O3_CPU::prefetch_past_mispredict(){
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch(){
-  if(FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0 && PTQ.size() && FTQ.size()){
-        PTQ.pop_front();
-        if(ptq_prefetch_entry){
-          ptq_prefetch_entry--;
-        }
-  }
+  if(FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0 && !PTQ.empty() && !FTQ.empty()){
+    PTQ.pop_front();
 
-  //Compare heads if FTQ.size() > 0
+    if(ptq_prefetch_entry){
+      ptq_prefetch_entry--;
+    }
+  }
+  current_block_address_ftq = FTQ.front();
+}
+
+void O3_CPU::compare_queues(){
   //If the heads are different then flush the PTQ
-  if(FTQ.front() != PTQ.front() && PTQ.size() && FTQ.size()){
+  if(FTQ.front() != PTQ.front() && !PTQ.empty() && !FTQ.empty()){
+    num_ptq_flushed++;
     // Flush the ptq
     PTQ.clear();
-
     wp_after_ftqflush = false;
 
     //Fill the ptq with entires from the ftq
@@ -401,13 +404,16 @@ void O3_CPU::new_cache_block_fetch(){
       fill_prefetch_queue(*it);
     }
 
-    ptq_init = true;
+    ptq_init = false;
     ptq_prefetch_entry = 0;
     instrs_to_speculate_this_cycle = 0;
     has_speculated = 0;
-    current_block_address_ptq_back = 0;
+    if(!PTQ.empty()){
+      current_block_address_ptq_back = PTQ.back();
+    }else{
+      current_block_address_ptq_back = 0;
+    }
   }
-  // If the same then continue same as before
 }
 
 void O3_CPU::check_dib()
@@ -495,22 +501,21 @@ void O3_CPU::fetch_instruction()
     fetch_stall = 0;
     fetch_resume_cycle = 0;
 
-          // Get stats for number of cb added during fetch stall
-    if(num_cb_to_PTQ_fetch_stall < 6){
-      num_cb_0_5++;
-    }else if(num_cb_to_PTQ_fetch_stall > 5 && num_cb_to_PTQ_fetch_stall < 11){
-      num_cb_6_10++;
-    }else if(num_cb_to_PTQ_fetch_stall > 10 && num_cb_to_PTQ_fetch_stall < 16){
-      num_cb_11_15++;
-    }else if(num_cb_to_PTQ_fetch_stall > 15 && num_cb_to_PTQ_fetch_stall < 21){
-      num_cb_16_20++;
-    }else if(num_cb_to_PTQ_fetch_stall > 20 && num_cb_to_PTQ_fetch_stall < 26){
-      num_cb_21_25++;
-    }else if(num_cb_to_PTQ_fetch_stall > 25){
-      num_cb_26_128++;
+    // Get stats for number of cb added during fetch stall
+    if (num_cb_to_PTQ_fetch_stall < 6) {
+        num_cb_0_5++;
+    } else if (num_cb_to_PTQ_fetch_stall < 11) {
+        num_cb_6_10++;
+    } else if (num_cb_to_PTQ_fetch_stall < 16) {
+        num_cb_11_15++;
+    } else if (num_cb_to_PTQ_fetch_stall < 21) {
+        num_cb_16_20++;
+    } else if (num_cb_to_PTQ_fetch_stall < 26) {
+        num_cb_21_25++;
+    } else {
+        num_cb_26_128++;
     }
     cb_until_time_start = num_cb_to_PTQ_fetch_stall;
-
     num_cb_to_PTQ_fetch_stall = 0;
   }
 
@@ -572,6 +577,8 @@ void O3_CPU::promote_to_decode()
 
     IFETCH_BUFFER.pop_front();
     FTQ.pop_front();
+
+    // STAT start
     if(index_first_spec){
       index_first_spec--;
     }
@@ -597,15 +604,18 @@ void O3_CPU::promote_to_decode()
       }
       
       cycles_fetch_first_cb_after_prf=0;
-    }
-    //Check if it is a new cache block at the head and the PTQ should also be popped
-    new_cache_block_fetch();
-    current_block_address_ftq = FTQ.front();
 
-    num_entries_in_ftq--;
-    if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
-      num_empty_ftq_entries++;
+      num_entries_in_ftq--;
+      if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
+        num_empty_ftq_entries++;
+      }
     }
+    // STAT end
+
+    //Check if it is a new cache block at the head and the PTQ should also be popped
+
+    new_cache_block_fetch();
+    compare_queues();
 
     available_fetch_bandwidth--;
   }
