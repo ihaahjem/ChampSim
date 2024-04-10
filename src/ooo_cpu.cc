@@ -240,7 +240,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         }else{
           btb_input = std::make_pair(predicted_branch_target, always_taken);
         }
-        num_empty_ftq_entries = IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy();
+        num_empty_ftq_entries = IFETCH_BUFFER.size() - num_entries_in_ftq;
         if(arch_instr.branch_taken == 0){
           instrs_to_speculate_this_cycle = 0;
         }else{
