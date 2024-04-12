@@ -443,7 +443,7 @@ int main(int argc, char** argv)
       }
 
       // Continue filling the PTQ speculatively if fetch_stall = 1 before finished speculating
-      while (ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
+      while (ooo_cpu[i]->ptq_init && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
       }
 

@@ -18,7 +18,7 @@ extern uint8_t MAX_INSTR_DESTINATIONS;
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
-  instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+  instrs_to_speculate_this_cycle = FETCH_WIDTH;
 
   // For stats --start--
   if(fetch_stall){
@@ -246,6 +246,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
           if(arch_instr.branch_taken == 1){
             instrs_to_speculate_this_cycle = 0;
+          }else{
+            instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
           }
         }
         
@@ -347,6 +349,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Add to the FTQ.
   FTQ.push_back(block_address);
   num_entries_in_ftq++;
+  num_empty_ftq_entries = IFETCH_BUFFER.size() - FTQ.size();
 
   // Perform queue comparison if conditions are met.
   if (!FTQ.empty() && !PTQ.empty() && compare_index >= 0 && compare_index < PTQ.size()) {
@@ -669,9 +672,7 @@ void O3_CPU::promote_to_decode()
     current_block_address_ftq = FTQ.front();
 
     num_entries_in_ftq--;
-    // if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
-    //   num_empty_ftq_entries++;
-    // }
+    num_empty_ftq_entries++;
 
     available_fetch_bandwidth--;
   }
