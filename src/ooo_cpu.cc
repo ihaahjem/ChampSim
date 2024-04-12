@@ -524,39 +524,54 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
-
-    // Get stats for number of cache blocks added during fetch stall
-    if (num_cb_to_PTQ_fetch_stall < 6) {
-        num_cb_0_5++;
-    } else if (num_cb_to_PTQ_fetch_stall < 11) { 
+    // TODO: Check if has speculated during fetch stall. 
+    // Can set a variable if the number of instrs to speculate are zero.
+    if (num_cb_to_PTQ_fetch_stall == 0) {
+        num_cb_0++;
+    } else if (num_cb_to_PTQ_fetch_stall == 1) {
+        num_cb_1++;
+    } else if (num_cb_to_PTQ_fetch_stall == 2) {
+        num_cb_2++;
+    } else if (num_cb_to_PTQ_fetch_stall == 3) {
+        num_cb_3++;
+    } else if (num_cb_to_PTQ_fetch_stall == 4) {
+        num_cb_4++;
+    } else if (num_cb_to_PTQ_fetch_stall < 11) {
         num_cb_6_10++;
-    } else if (num_cb_to_PTQ_fetch_stall < 16) { 
+    } else if (num_cb_to_PTQ_fetch_stall < 16) {
         num_cb_11_15++;
-    } else if (num_cb_to_PTQ_fetch_stall < 21) { 
+    } else if (num_cb_to_PTQ_fetch_stall < 21) {
         num_cb_16_20++;
-    } else if (num_cb_to_PTQ_fetch_stall < 26) { 
+    } else if (num_cb_to_PTQ_fetch_stall < 26) {
         num_cb_21_25++;
-    } else { 
+    } else {
         num_cb_26_128++;
     }
     cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
     num_cb_to_PTQ_fetch_stall = 0;
 
-    if (num_addr_to_PTQ_fetch_stall < 6) {
-        num_addr_0_5++;
-    } else if (num_addr_to_PTQ_fetch_stall < 12) { 
+    if (num_addr_to_PTQ_fetch_stall == 0) {
+        num_addr_0++;
+    } else if (num_addr_to_PTQ_fetch_stall == 1) {
+        num_addr_1++;
+    } else if (num_addr_to_PTQ_fetch_stall == 2) {
+        num_addr_2++;
+    } else if (num_addr_to_PTQ_fetch_stall == 3) {
+        num_addr_3++;
+    } else if (num_addr_to_PTQ_fetch_stall == 4) {
+        num_addr_4++;
+    } else if (num_addr_to_PTQ_fetch_stall < 12) {
         num_addr_6_11++;
-    } else if (num_addr_to_PTQ_fetch_stall < 18) { 
+    } else if (num_addr_to_PTQ_fetch_stall < 18) {
         num_addr_12_17++;
-    } else if (num_addr_to_PTQ_fetch_stall < 24) { 
+    } else if (num_addr_to_PTQ_fetch_stall < 24) {
         num_addr_18_23++;
-    } else if (num_addr_to_PTQ_fetch_stall < 29) { 
+    } else if (num_addr_to_PTQ_fetch_stall < 29) {
         num_addr_24_29++;
-    } else { 
+    } else {
         num_addr_above++;
     }
-
     num_addr_to_PTQ_fetch_stall = 0;
     
   }
@@ -629,18 +644,26 @@ void O3_CPU::promote_to_decode()
     if(!index_start_count && start_counting_cycles){
       start_counting_cycles = false;
 
-      if(cycles_fetch_first_cb_after_prf < 6){
-        cycles_0_5++;
-      }else if(cycles_fetch_first_cb_after_prf < 12){
-        cycles_6_11++;
-      }else if(cycles_fetch_first_cb_after_prf < 18){
-        cycles_12_17++;
-      }else if(cycles_fetch_first_cb_after_prf < 24){
-        cycles_18_23++;
-      }else if(cycles_fetch_first_cb_after_prf < 30){
-        cycles_24_29++;
-      }else{
-        cycles_above++;
+      if (cycles_fetch_first_cb_after_prf == 0) {
+          cycles_0++;
+      } else if (cycles_fetch_first_cb_after_prf == 1) {
+          cycles_1++;
+      } else if (cycles_fetch_first_cb_after_prf == 2) {
+          cycles_2++;
+      } else if (cycles_fetch_first_cb_after_prf == 3) {
+          cycles_3++;
+      } else if (cycles_fetch_first_cb_after_prf == 4) {
+          cycles_4++;
+      } else if (cycles_fetch_first_cb_after_prf < 12) {
+          cycles_6_11++;
+      } else if (cycles_fetch_first_cb_after_prf < 18) {
+          cycles_12_17++;
+      } else if (cycles_fetch_first_cb_after_prf < 24) {
+          cycles_18_23++;
+      } else if (cycles_fetch_first_cb_after_prf < 30) {
+          cycles_24_29++;
+      } else {
+          cycles_above++;
       }
       
       cycles_fetch_first_cb_after_prf=0;

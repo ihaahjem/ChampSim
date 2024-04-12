@@ -83,7 +83,13 @@ public:
     uint64_t num_instr_fetch_stall = 0;
     uint64_t num_instr_not_fetch_stall = 0;
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
+
       uint64_t num_cb_0_5 = 0;
+      uint64_t num_cb_0 = 0;
+      uint64_t num_cb_1 = 0;
+      uint64_t num_cb_2 = 0;
+      uint64_t num_cb_3 = 0;
+      uint64_t num_cb_4 = 0;
       uint64_t num_cb_6_10 = 0;
       uint64_t num_cb_11_15 = 0;
       uint64_t num_cb_16_20 = 0;
@@ -92,6 +98,11 @@ public:
 
     uint64_t num_addr_to_PTQ_fetch_stall = 0;
       uint64_t num_addr_0_5 = 0;
+      uint64_t num_addr_0 = 0;
+      uint64_t num_addr_1 = 0;
+      uint64_t num_addr_2 = 0;
+      uint64_t num_addr_3 = 0;
+      uint64_t num_addr_4 = 0;
       uint64_t num_addr_6_11 = 0;
       uint64_t num_addr_12_17 = 0;
       uint64_t num_addr_18_23 = 0;
@@ -104,12 +115,19 @@ public:
     bool start_counting_cycles = false;
     uint64_t index_start_count = 0;
     uint64_t cycles_0_5 = 0;
+    uint64_t cycles_0 = 0;
+    uint64_t cycles_1 = 0;
+    uint64_t cycles_2 = 0;
+    uint64_t cycles_3 = 0;
+    uint64_t cycles_4 = 0;
     uint64_t cycles_6_11 = 0;
     uint64_t cycles_12_17 = 0;
     uint64_t cycles_18_23 = 0;
     uint64_t cycles_24_29 = 0;
     uint64_t cycles_above = 0;
     uint64_t percentage_tot = 0;
+
+
 
       uint64_t num_fetch_stall = 0;
 
