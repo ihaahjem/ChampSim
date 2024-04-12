@@ -241,7 +241,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
           btb_input = std::make_pair(predicted_branch_target, always_taken);
         }
         num_empty_ftq_entries = IFETCH_BUFFER.size() - num_entries_in_ftq;
-        if(arch_instr.branch_taken == 0){
+        if(arch_instr.branch_taken == 1){
           instrs_to_speculate_this_cycle = 0;
         }else{
           instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
@@ -481,7 +481,7 @@ void O3_CPU::fetch_instruction()
     num_ptq_flushed++;
     ptq_prefetch_entry = 0;
 
-          // Get stats for number of cb added during fetch stall
+    // Get stats for number of cb added during fetch stall
     if(num_cb_to_PTQ_fetch_stall < 6){
       num_cb_0_5++;
     }else if(num_cb_to_PTQ_fetch_stall > 5 && num_cb_to_PTQ_fetch_stall < 11){
