@@ -243,7 +243,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
             btb_input = std::make_pair(predicted_branch_target, always_taken);
           } 
 
-          if(arch_instr.branch_taken == 0){
+          if(arch_instr.branch_taken == 1){
             instrs_to_speculate_this_cycle = 0;
           }else{
             instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
