@@ -18,6 +18,7 @@ extern uint8_t MAX_INSTR_DESTINATIONS;
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
+  instrs_to_speculate_this_cycle = FETCH_WIDTH;
 
   if(fetch_stall){
     num_cycles_fetch_stall++;
@@ -243,8 +244,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         num_empty_ftq_entries = IFETCH_BUFFER.size() - num_entries_in_ftq;
         if(arch_instr.branch_taken == 1){
           instrs_to_speculate_this_cycle = 0;
+          speculate = false;
         }else{
-          instrs_to_speculate_this_cycle = FETCH_WIDTH;
+          instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+          speculate = true;
         }
         
         fetch_stall = 1;
@@ -280,6 +283,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         instrs_to_read_this_cycle = 0;
       }
       instrs_to_speculate_this_cycle = 0;
+      speculate = false;
 
     }
 
@@ -468,22 +472,58 @@ void O3_CPU::fetch_instruction()
     ptq_prefetch_entry = 0;
 
     // Get stats for number of cb added during fetch stall
-    if(num_cb_to_PTQ_fetch_stall < 6){
-      num_cb_0_5++;
-    }else if(num_cb_to_PTQ_fetch_stall > 5 && num_cb_to_PTQ_fetch_stall < 11){
-      num_cb_6_10++;
-    }else if(num_cb_to_PTQ_fetch_stall > 10 && num_cb_to_PTQ_fetch_stall < 16){
-      num_cb_11_15++;
-    }else if(num_cb_to_PTQ_fetch_stall > 15 && num_cb_to_PTQ_fetch_stall < 21){
-      num_cb_16_20++;
-    }else if(num_cb_to_PTQ_fetch_stall > 20 && num_cb_to_PTQ_fetch_stall < 26){
-      num_cb_21_25++;
-    }else if(num_cb_to_PTQ_fetch_stall > 25){
-      num_cb_26_128++;
-    }
-    cb_until_time_start = num_cb_to_PTQ_fetch_stall;
+    // Get stats for number of cache blocks added during fetch stall
+    if(speculate){
+      if (num_cb_to_PTQ_fetch_stall == 0) {
+          num_cb_0++;
+      } else if (num_cb_to_PTQ_fetch_stall == 1) {
+          num_cb_1++;
+      } else if (num_cb_to_PTQ_fetch_stall == 2) {
+          num_cb_2++;
+      } else if (num_cb_to_PTQ_fetch_stall == 3) {
+          num_cb_3++;
+      } else if (num_cb_to_PTQ_fetch_stall == 4) {
+          num_cb_4++;
+      } else if (num_cb_to_PTQ_fetch_stall < 11) {
+          num_cb_6_10++;
+      } else if (num_cb_to_PTQ_fetch_stall < 16) {
+          num_cb_11_15++;
+      } else if (num_cb_to_PTQ_fetch_stall < 21) {
+          num_cb_16_20++;
+      } else if (num_cb_to_PTQ_fetch_stall < 26) {
+          num_cb_21_25++;
+      } else {
+          num_cb_26_128++;
+      }
+      cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
-    num_cb_to_PTQ_fetch_stall = 0;
+      num_cb_to_PTQ_fetch_stall = 0;
+
+      // Get stats for number of addresses accessed during fetch stall
+      if (num_addr_to_PTQ_fetch_stall == 0) {
+          num_addr_0++;
+      } else if (num_addr_to_PTQ_fetch_stall == 1) {
+          num_addr_1++;
+      } else if (num_addr_to_PTQ_fetch_stall == 2) {
+          num_addr_2++;
+      } else if (num_addr_to_PTQ_fetch_stall == 3) {
+          num_addr_3++;
+      } else if (num_addr_to_PTQ_fetch_stall == 4) {
+          num_addr_4++;
+      } else if (num_addr_to_PTQ_fetch_stall < 12) {
+          num_addr_6_11++;
+      } else if (num_addr_to_PTQ_fetch_stall < 18) {
+          num_addr_12_17++;
+      } else if (num_addr_to_PTQ_fetch_stall < 24) {
+          num_addr_18_23++;
+      } else if (num_addr_to_PTQ_fetch_stall < 29) {
+          num_addr_24_29++;
+      } else {
+          num_addr_above++;
+      }
+      num_addr_to_PTQ_fetch_stall = 0;
+      speculate = false;
+    }
   }
 
 
@@ -549,16 +589,26 @@ void O3_CPU::promote_to_decode()
     }
     if(!index_start_count && start_counting_cycles){
       start_counting_cycles = false;
-      if(cycles_fetch_first_cb_after_prf < 3){
-        cycles_0_2++;
-      }else if(cycles_fetch_first_cb_after_prf > 2 && cycles_fetch_first_cb_after_prf < 6){
-        cycles_3_5++;
-      }else if(cycles_fetch_first_cb_after_prf > 5 && cycles_fetch_first_cb_after_prf < 9){
-        cycles_6_8++;
-      }else if(cycles_fetch_first_cb_after_prf > 8 && cycles_fetch_first_cb_after_prf < 12){
-        cycles_9_11++;
-      }else{
-        cycles_above++;
+      if (cycles_fetch_first_cb_after_prf == 0) {
+          cycles_0++;
+      } else if (cycles_fetch_first_cb_after_prf == 1) {
+          cycles_1++;
+      } else if (cycles_fetch_first_cb_after_prf == 2) {
+          cycles_2++;
+      } else if (cycles_fetch_first_cb_after_prf == 3) {
+          cycles_3++;
+      } else if (cycles_fetch_first_cb_after_prf == 4) {
+          cycles_4++;
+      } else if (cycles_fetch_first_cb_after_prf < 12) {
+          cycles_6_11++;
+      } else if (cycles_fetch_first_cb_after_prf < 18) {
+          cycles_12_17++;
+      } else if (cycles_fetch_first_cb_after_prf < 24) {
+          cycles_18_23++;
+      } else if (cycles_fetch_first_cb_after_prf < 30) {
+          cycles_24_29++;
+      } else {
+          cycles_above++;
       }
       cycles_fetch_first_cb_after_prf=0;
     }

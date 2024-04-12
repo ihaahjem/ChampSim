@@ -481,20 +481,43 @@ int main(int argc, char** argv)
         cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
         cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
-        cout << " Percentage cb num_0_5 " << (0.0+ooo_cpu[i]->num_cb_0_5)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_6_10 " << (0.0+ooo_cpu[i]->num_cb_6_10)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_11_15 " << (0.0+ooo_cpu[i]->num_cb_11_15)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_16_20 " << (0.0+ooo_cpu[i]->num_cb_16_20)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_21_25 " << (0.0+ooo_cpu[i]->num_cb_21_25)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_26_128 " << (0.0+ooo_cpu[i]->num_cb_26_128)/ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " AVG fetch first after cb " << (0.0+ooo_cpu[i]->cycles_fetch_first_cb_after_prf)/ooo_cpu[i]->num_fetch_stall << endl;
-        uint64_t tot_cycles= ooo_cpu[i]->cycles_0_2 + ooo_cpu[i]->cycles_3_5 + ooo_cpu[i]->cycles_6_8 + ooo_cpu[i]->cycles_9_11 + ooo_cpu[i]->cycles_above;
-        if(tot_cycles){
-          cout << " cycles 0_2 " << (0.0+ooo_cpu[i]->cycles_0_2)/tot_cycles << endl;
-          cout << " cycles 3_5 " << (0.0+ooo_cpu[i]->cycles_3_5)/tot_cycles << endl;
-          cout << " cycles 6_8 " << (0.0+ooo_cpu[i]->cycles_6_8)/tot_cycles << endl;
-          cout << " cycles 9_11 " << (0.0+ooo_cpu[i]->cycles_9_11)/tot_cycles << endl;
-          cout << " above 11 " << (0.0+ooo_cpu[i]->cycles_above)/tot_cycles << endl;
+        
+        uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_128;
+        cout << " Percentage cb num_0 " << (0.0 + ooo_cpu[i]->num_cb_0) / tot_cb << endl;
+        cout << " Percentage cb num_1 " << (0.0 + ooo_cpu[i]->num_cb_1) / tot_cb << endl;
+        cout << " Percentage cb num_2 " << (0.0 + ooo_cpu[i]->num_cb_2) / tot_cb << endl;
+        cout << " Percentage cb num_3 " << (0.0 + ooo_cpu[i]->num_cb_3) / tot_cb << endl;
+        cout << " Percentage cb num_4 " << (0.0 + ooo_cpu[i]->num_cb_4) / tot_cb << endl;
+        cout << " Percentage cb num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10) / tot_cb << endl;
+        cout << " Percentage cb num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15) / tot_cb << endl;
+        cout << " Percentage cb num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20) / tot_cb << endl;
+        cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / tot_cb << endl;
+        cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / tot_cb << endl;
+
+        uint64_t tot_addr = ooo_cpu[i]->num_addr_0 + ooo_cpu[i]->num_addr_1 + ooo_cpu[i]->num_addr_2 + ooo_cpu[i]->num_addr_3 + ooo_cpu[i]->num_addr_4 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_12_17 + ooo_cpu[i]->num_addr_18_23 + ooo_cpu[i]->num_addr_24_29 + ooo_cpu[i]->num_addr_above;
+        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0) / tot_addr << endl;
+        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_1) / tot_addr << endl;
+        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_2) / tot_addr << endl;
+        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_3) / tot_addr << endl;
+        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_4) / tot_addr << endl;
+        cout << " Percentage addr num_6_11 " << (0.0 + ooo_cpu[i]->num_addr_6_11) / tot_addr << endl;
+        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_12_17) / tot_addr << endl;
+        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_18_23) / tot_addr << endl;
+        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_24_29) / tot_addr << endl;
+        cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / tot_addr << endl;
+
+        uint64_t tot_cycles = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
+        if (tot_cycles) {
+            cout << " cycles 0 " << (0.0 + ooo_cpu[i]->cycles_0) / tot_cycles << endl;
+            cout << " cycles 1 " << (0.0 + ooo_cpu[i]->cycles_1) / tot_cycles << endl;
+            cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
+            cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
+            cout << " cycles 4 " << (0.0 + ooo_cpu[i]->cycles_4) / tot_cycles << endl;
+            cout << " cycles 6_11 " << (0.0 + ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
+            cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
+            cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
+            cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
+            cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
         }
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);

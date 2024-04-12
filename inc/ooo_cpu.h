@@ -55,6 +55,7 @@ public:
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
   std::pair<uint64_t, uint8_t> btb_input;
+  bool speculate = false;
 
   //
   uint64_t num_entries_in_ftq = 0;
@@ -76,23 +77,47 @@ public:
     uint64_t index_first_spec = 0;
     uint64_t num_instr_fetch_stall = 0;
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
-    uint64_t num_addr_to_PTQ_fetch_stall = 0;
+
       uint64_t num_cb_0_5 = 0;
+      uint64_t num_cb_0 = 0;
+      uint64_t num_cb_1 = 0;
+      uint64_t num_cb_2 = 0;
+      uint64_t num_cb_3 = 0;
+      uint64_t num_cb_4 = 0;
       uint64_t num_cb_6_10 = 0;
       uint64_t num_cb_11_15 = 0;
       uint64_t num_cb_16_20 = 0;
       uint64_t num_cb_21_25 = 0;
       uint64_t num_cb_26_128 = 0;
 
+    uint64_t num_addr_to_PTQ_fetch_stall = 0;
+      uint64_t num_addr_0_5 = 0;
+      uint64_t num_addr_0 = 0;
+      uint64_t num_addr_1 = 0;
+      uint64_t num_addr_2 = 0;
+      uint64_t num_addr_3 = 0;
+      uint64_t num_addr_4 = 0;
+      uint64_t num_addr_6_11 = 0;
+      uint64_t num_addr_12_17 = 0;
+      uint64_t num_addr_18_23 = 0;
+      uint64_t num_addr_24_29 = 0;
+      uint64_t num_addr_above = 0;
+
     //time to fetch after bm resolved that has not been prefetched
     uint64_t cb_until_time_start = 0;
     uint64_t cycles_fetch_first_cb_after_prf = 0;
     bool start_counting_cycles = false;
     uint64_t index_start_count = 0;
-    uint64_t cycles_0_2 = 0;
-    uint64_t cycles_3_5 = 0;
-    uint64_t cycles_6_8 = 0;
-    uint64_t cycles_9_11 = 0;
+    uint64_t cycles_0_5 = 0;
+    uint64_t cycles_0 = 0;
+    uint64_t cycles_1 = 0;
+    uint64_t cycles_2 = 0;
+    uint64_t cycles_3 = 0;
+    uint64_t cycles_4 = 0;
+    uint64_t cycles_6_11 = 0;
+    uint64_t cycles_12_17 = 0;
+    uint64_t cycles_18_23 = 0;
+    uint64_t cycles_24_29 = 0;
     uint64_t cycles_above = 0;
     uint64_t percentage_tot = 0;
 
