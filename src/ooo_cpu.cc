@@ -244,7 +244,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         if(arch_instr.branch_taken == 1){
           instrs_to_speculate_this_cycle = 0;
         }else{
-          instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+          instrs_to_speculate_this_cycle = FETCH_WIDTH;
         }
         
         fetch_stall = 1;
@@ -321,8 +321,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   num_entries_in_ftq++;
     
   // Add to prefetch_queue
-  if(PTQ.size() < MAX_PTQ_ENTRIES){
-    fill_prefetch_queue(arch_instr.ip);
+  fill_prefetch_queue(arch_instr.ip);
+
+  if(fetch_stall && instrs_to_speculate_this_cycle){
+    fill_prefetch_queue(btb_input.first);
+    instrs_to_speculate_this_cycle--;
   }
   
   instr_unique_id++;
@@ -332,33 +335,16 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     // Get block address
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
-    // Add block to the prefetch queue if it is not already there and not recently prefetched
-    // std::deque<uint64_t>::iterator it0 = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-    // if(it0 == recently_prefetched.end()){
-      std::deque<uint64_t>::iterator it1 = std::find(PTQ.begin(), PTQ.end(), block_address);
-      if (it1 == PTQ.end()) {
-        PTQ.push_back(block_address);
-        if(fetch_stall == 1){
-          num_cb_to_PTQ_fetch_stall++;
-        }
+    //Check that the block address is not the same as the last block address added to PTQ
+    if((!PTQ.empty() && PTQ.back() != block_address) || PTQ.empty()){
+      PTQ.push_back(block_address);
+      if(fetch_stall == 1){
+        num_cb_to_PTQ_fetch_stall++;
       }
-    // }
-
-    // if(PTQ.size() == 0){
-    //   PTQ.push_back(block_address);
-    //   // If fetch_stall increment the number of cache blocks added during wrong path
-    //   if(fetch_stall == 1){
-    //     num_cb_to_PTQ_fetch_stall++;
-    //   }
-    // }else if(PTQ.back() != block_address){
-    //   PTQ.push_back(block_address);
-    //   // If fetch_stall increment the number of cache blocks added during wrong path
-    //   if(fetch_stall == 1){
-    //     num_cb_to_PTQ_fetch_stall++;
-    //   }
-    // }
-
-
+    }
+    if(fetch_stall){
+      num_addr_to_PTQ_fetch_stall++;
+    }
 }
 
 void O3_CPU::fill_ptq_speculatively(){
