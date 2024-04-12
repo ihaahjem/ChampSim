@@ -76,6 +76,7 @@ public:
   uint64_t num_prefetched_wrong_path_after_flush = 0;
   bool wp_after_ftqflush = false;
   uint64_t num_ptq_flushed = 0;
+  bool speculate = false;
   
 
     // What did we prefetcch on wrong path and how many of them were useful

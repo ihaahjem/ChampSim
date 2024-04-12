@@ -246,8 +246,10 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
           if(arch_instr.branch_taken == 1){
             instrs_to_speculate_this_cycle = 0;
+            speculate = false;
           }else{
             instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+            speculate = true;
           }
         }
         
@@ -427,6 +429,7 @@ void O3_CPU::compare_queues(){
     instrs_to_speculate_this_cycle = 0;
     wp_after_ftqflush = false;
     current_block_address_ptq_back = 0;
+    speculate = false;
 
     //Fill the ptq with entires from the ftq
     auto copy_ptq = PTQ;
@@ -523,57 +526,70 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
-    // TODO: Check if has speculated during fetch stall. 
-    // Can set a variable if the number of instrs to speculate are zero.
-    if (num_cb_to_PTQ_fetch_stall == 0) {
-        num_cb_0++;
-    } else if (num_cb_to_PTQ_fetch_stall == 1) {
-        num_cb_1++;
-    } else if (num_cb_to_PTQ_fetch_stall == 2) {
-        num_cb_2++;
-    } else if (num_cb_to_PTQ_fetch_stall == 3) {
-        num_cb_3++;
-    } else if (num_cb_to_PTQ_fetch_stall == 4) {
-        num_cb_4++;
-    } else if (num_cb_to_PTQ_fetch_stall < 11) {
-        num_cb_6_10++;
-    } else if (num_cb_to_PTQ_fetch_stall < 16) {
-        num_cb_11_15++;
-    } else if (num_cb_to_PTQ_fetch_stall < 21) {
-        num_cb_16_20++;
-    } else if (num_cb_to_PTQ_fetch_stall < 26) {
-        num_cb_21_25++;
-    } else {
-        num_cb_26_128++;
-    }
-    cb_until_time_start = num_cb_to_PTQ_fetch_stall;
+    if(!speculate){
+      // Flush the ptq
+      PTQ.clear();
 
-    num_cb_to_PTQ_fetch_stall = 0;
+      // Reset the necessary state variables.
+      ptq_init = false;
+      ptq_prefetch_entry = 0;
+      instrs_to_speculate_this_cycle = 0;
+      wp_after_ftqflush = false;
+      current_block_address_ptq_back = 0;
+    }else{
+      // TODO: Check if has speculated during fetch stall. 
+      // Can set a variable if the number of instrs to speculate are zero.
+      if (num_cb_to_PTQ_fetch_stall == 0) {
+          num_cb_0++;
+      } else if (num_cb_to_PTQ_fetch_stall == 1) {
+          num_cb_1++;
+      } else if (num_cb_to_PTQ_fetch_stall == 2) {
+          num_cb_2++;
+      } else if (num_cb_to_PTQ_fetch_stall == 3) {
+          num_cb_3++;
+      } else if (num_cb_to_PTQ_fetch_stall == 4) {
+          num_cb_4++;
+      } else if (num_cb_to_PTQ_fetch_stall < 11) {
+          num_cb_6_10++;
+      } else if (num_cb_to_PTQ_fetch_stall < 16) {
+          num_cb_11_15++;
+      } else if (num_cb_to_PTQ_fetch_stall < 21) {
+          num_cb_16_20++;
+      } else if (num_cb_to_PTQ_fetch_stall < 26) {
+          num_cb_21_25++;
+      } else {
+          num_cb_26_128++;
+      }
+      cb_until_time_start = num_cb_to_PTQ_fetch_stall;
 
-    if (num_addr_to_PTQ_fetch_stall == 0) {
-        num_addr_0++;
-    } else if (num_addr_to_PTQ_fetch_stall == 1) {
-        num_addr_1++;
-    } else if (num_addr_to_PTQ_fetch_stall == 2) {
-        num_addr_2++;
-    } else if (num_addr_to_PTQ_fetch_stall == 3) {
-        num_addr_3++;
-    } else if (num_addr_to_PTQ_fetch_stall == 4) {
-        num_addr_4++;
-    } else if (num_addr_to_PTQ_fetch_stall < 12) {
-        num_addr_6_11++;
-    } else if (num_addr_to_PTQ_fetch_stall < 18) {
-        num_addr_12_17++;
-    } else if (num_addr_to_PTQ_fetch_stall < 24) {
-        num_addr_18_23++;
-    } else if (num_addr_to_PTQ_fetch_stall < 29) {
-        num_addr_24_29++;
-    } else {
-        num_addr_above++;
+      num_cb_to_PTQ_fetch_stall = 0;
+
+      if (num_addr_to_PTQ_fetch_stall == 0) {
+          num_addr_0++;
+      } else if (num_addr_to_PTQ_fetch_stall == 1) {
+          num_addr_1++;
+      } else if (num_addr_to_PTQ_fetch_stall == 2) {
+          num_addr_2++;
+      } else if (num_addr_to_PTQ_fetch_stall == 3) {
+          num_addr_3++;
+      } else if (num_addr_to_PTQ_fetch_stall == 4) {
+          num_addr_4++;
+      } else if (num_addr_to_PTQ_fetch_stall < 12) {
+          num_addr_6_11++;
+      } else if (num_addr_to_PTQ_fetch_stall < 18) {
+          num_addr_12_17++;
+      } else if (num_addr_to_PTQ_fetch_stall < 24) {
+          num_addr_18_23++;
+      } else if (num_addr_to_PTQ_fetch_stall < 29) {
+          num_addr_24_29++;
+      } else {
+          num_addr_above++;
+      }
+      num_addr_to_PTQ_fetch_stall = 0; 
     }
-    num_addr_to_PTQ_fetch_stall = 0;
-    
   }
+
+
 
 
   if (IFETCH_BUFFER.empty())
