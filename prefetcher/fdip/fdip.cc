@@ -65,10 +65,9 @@ void O3_CPU::prefetcher_cycle_operate() {
           L1I->prefetch_line(element,true, 0, false, false);
         }
         recently_prefetched.push_back(element);
-      }
-      
-      if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
-        recently_prefetched.pop_front();
+        if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+          recently_prefetched.pop_front();
+        }        
       }
     }
     

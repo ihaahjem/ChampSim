@@ -284,7 +284,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       }
       instrs_to_speculate_this_cycle = 0;
       speculate = false;
-
     }
 
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -616,9 +615,9 @@ void O3_CPU::promote_to_decode()
     current_block_address_ftq = FTQ.front();
 
     num_entries_in_ftq--;
-    if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
-      num_empty_ftq_entries++;
-    }
+    // if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
+    //   num_empty_ftq_entries++;
+    // }
 
     available_fetch_bandwidth--;
   }
