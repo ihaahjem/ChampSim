@@ -368,7 +368,7 @@ void O3_CPU::fill_ptq_speculatively(){
     
     instrs_to_speculate_this_cycle--;
 
-    num_empty_ftq_entries--;
+    // num_empty_ftq_entries--;
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
