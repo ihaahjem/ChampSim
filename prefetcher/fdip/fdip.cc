@@ -83,7 +83,6 @@ void O3_CPU::prefetcher_cycle_operate() {
     if(index_first_spec > 0){
       index_first_spec--;
     }
-
   }
 }
 

@@ -321,7 +321,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   FTQ.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
 
-
   num_entries_in_ftq++;
     
   // Add to prefetch_queue
