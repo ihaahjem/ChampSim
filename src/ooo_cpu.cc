@@ -18,6 +18,7 @@ extern uint8_t MAX_INSTR_DESTINATIONS;
 void O3_CPU::operate()
 {
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
+  instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
 
   // For stats --start--
   if(fetch_stall){
@@ -245,11 +246,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
           if(arch_instr.branch_taken == 1){
             instrs_to_speculate_this_cycle = 0;
-          }else{
-            instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
           }
-        }else{
-          instrs_to_speculate_this_cycle = FETCH_WIDTH;
         }
         
         fetch_stall = 1;
@@ -286,10 +283,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       if (arch_instr.branch_taken == 1) {
         instrs_to_read_this_cycle = 0;
       }
-
-      if(ptq_init){
-        //Set instrs to speculate this cycle
-        instrs_to_speculate_this_cycle = FETCH_WIDTH;
+      if(!ptq_init){
+        instrs_to_speculate_this_cycle = 0;
       }
     }
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -323,34 +318,33 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
   // For stats --end-- 
-   
-  // Attempt to fill the PTQ if there's room and ptq_init is false.
-  if (!ptq_init) {
-    fill_prefetch_queue(arch_instr.ip);
+  
+  // If the ptq_init is true and there are instructions to speculate,
+  // fill the PTQ speculatively
+  if(ptq_init && instrs_to_speculate_this_cycle){
+    fill_ptq_speculatively();
   }
-
+  // If ptq_init is false, fill the PTQ with current address from trace.
   // Update compare_index based on ptq_init status and conditions.
   if (!ptq_init) {
+    fill_prefetch_queue(arch_instr.ip);
     compare_index = PTQ.size() - 1; // Always set to the last entry if ptq_init.
   } else if (compare_index < PTQ.size() - 1 && FTQ.back() != block_address && PTQ.size() > 1) {
     compare_index++; // Only increment compare_index if it's within bounds and a new cache block is added to FTQ
   }
 
-  // Handle fetch stall: reset ptq_init, fill PTQ with the BTB prediction, and update compare_index.
-  if (fetch_stall) {
-    if(!ptq_init){
+  // Handle fetch stall: reset ptq_init, fill PTQ with the BTB prediction.
+  if (fetch_stall && !ptq_init) {
+    if(instrs_to_speculate_this_cycle){
       fill_prefetch_queue(btb_input.first);
-      if(instrs_to_speculate_this_cycle){
-        instrs_to_speculate_this_cycle--;
-      }
-      compare_index = PTQ.size() - 1;
+      instrs_to_speculate_this_cycle--;
     }
     ptq_init = true;
   }
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
-  // Always add the current block address to the FTQ.
+  // Add to the FTQ.
   FTQ.push_back(block_address);
   num_entries_in_ftq++;
 
@@ -397,13 +391,15 @@ void O3_CPU::fill_ptq_speculatively(){
 
     // Fill prefetch queue with the speculation
     fill_prefetch_queue(btb_result.first);
+
+    instrs_to_speculate_this_cycle--;
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch() {
   // Check if there are elements in the queue and both prefetch and compare indices are above 0.
   // If they are both above zero it means that the element has been prefetched and compared.
-  if (!PTQ.empty() && ptq_prefetch_entry && compare_index) {
+  if (!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq) {
     PTQ.pop_front(); // Remove the front element of the queue.
 
     // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
