@@ -246,7 +246,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
           instrs_to_speculate_this_cycle = 0;
           speculate = false;
         }else{
-          instrs_to_speculate_this_cycle = instrs_to_read_this_cycle;
+          instrs_to_speculate_this_cycle = FETCH_WIDTH;
           speculate = true;
         }
         
@@ -463,6 +463,8 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
+
+    num_cycles_fetch_stall = 0;
 
     // Clear the PTQ
     PTQ.clear();
