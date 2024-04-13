@@ -372,6 +372,24 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
+    // Collect miss stat
+    if(handle_pkt.fetch_stall){
+      if (handle_pkt.num_fetch_stall < 6) {
+        misses_0_5++;
+      } else if (handle_pkt.num_fetch_stall < 12) {
+          misses_6_11++;
+      } else if (handle_pkt.num_fetch_stall < 18) {
+          misses_12_17++;
+      } else if (handle_pkt.num_fetch_stall < 24) {
+          misses_18_23++;
+      } else if (handle_pkt.num_fetch_stall < 30) {
+          misses_24_29++;
+      } else if (handle_pkt.num_fetch_stall < 36) {
+          misses_30_35++;
+      } else {
+          misses_above++;
+      }
+    }
 
   return true;
 }
@@ -533,7 +551,7 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall)
 {
   pf_requested++;
 
@@ -548,6 +566,8 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
 
   pf_packet.fetch_stall = fetch_stall;
   pf_packet.conditional_bm = conditional_bm;
+  pf_packet.num_fetch_stall = num_fetch_stall;
+
 
   if (virtual_prefetch) {
     if (!VAPQ.full()) {

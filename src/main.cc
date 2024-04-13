@@ -97,6 +97,15 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
 
     cout << cache->NAME;
     cout << " AVERAGE MISS LATENCY: " << (1.0 * (cache->total_miss_latency)) / TOTAL_MISS << " cycles" << endl;
+            
+    // Misses counters during fetch stall
+    cout << "Misses 0-5: "  << cache->misses_0_5 << endl;
+    cout << "Misses 6-11: " << cache->misses_6_11 << endl;
+    cout << "Misses 12-17: " << cache->misses_12_17 << endl;
+    cout << "Misses 18-23: " << cache->misses_18_23 << endl;
+    cout << "Misses 24-29: " << cache->misses_24_29 << endl;
+    cout << "Misses 30-35: " << cache->misses_30_35 << endl;
+    cout << "Misses above: " << cache->misses_above << endl;
     // cout << " AVERAGE MISS LATENCY: " <<
     // (cache->total_miss_latency)/TOTAL_MISS << " cycles " <<
     // cache->total_miss_latency << "/" << TOTAL_MISS<< endl;
@@ -427,8 +436,9 @@ int main(int argc, char** argv)
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_cycles_fetch_stall < 1){
+      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
+        ooo_cpu[i]->num_instr_fetch_stall++;
       }
 
       // heartbeat information
@@ -514,12 +524,24 @@ int main(int argc, char** argv)
             cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
             cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
             cout << " cycles 4 " << (0.0 + ooo_cpu[i]->cycles_4) / tot_cycles << endl;
-            cout << " cycles 6_11 " << (0.0 + ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
+            cout << " cycles 6_11 " << (0.0 +  ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
             cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
             cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
             cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
             cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
         }
+
+
+
+        // FS_prf counters
+        cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->FS_prf_0_6 << endl;
+        cout << "FS_prf 6-11: " <<  ooo_cpu[i]->FS_prf_6_11 << endl;
+        cout << "FS_prf 12-17: " << ooo_cpu[i]->FS_prf_12_17 << endl;
+        cout << "FS_prf 18-23: " << ooo_cpu[i]->FS_prf_18_23 << endl;
+        cout << "FS_prf 24-29: " << ooo_cpu[i]->FS_prf_24_29 << endl;
+        cout << "FS_prf 30-35: " << ooo_cpu[i]->FS_prf_30_35 << endl;
+        cout << "FS_prf above: " << ooo_cpu[i]->FS_prf_above << endl;
+
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
       }

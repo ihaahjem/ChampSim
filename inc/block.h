@@ -19,6 +19,7 @@ public:
 
   bool fetch_stall = false;
   bool conditional_bm = false;
+  uint64_t num_fetch_stall = 0;
 
   uint8_t asid[2] = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()}, type = 0, fill_level = 0, pf_origin_level = 0;
 

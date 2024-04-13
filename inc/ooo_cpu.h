@@ -61,6 +61,16 @@ public:
   uint64_t num_entries_in_ftq = 0;
 
   // Stats
+
+    // for calculation of miss rate for WP start
+      bool prev_prefetch_was_fetch_stall = false;
+      uint64_t fetch_stall_prf_number = 0;
+
+      uint64_t FS_prf_0_6 = 0, FS_prf_6_11 = 0, FS_prf_12_17 = 0, FS_prf_18_23 = 0, FS_prf_24_29 = 0, FS_prf_30_35 = 0, FS_prf_above = 0;
+
+    // for calculation of miss rate for WP end
+
+
   uint64_t num_ftq_flush = 0;
   uint64_t num_ftq_flush_conditional = 0;
   uint64_t num_ftq_flush_call_return = 0;
@@ -123,7 +133,7 @@ public:
 
       uint64_t num_fetch_stall = 0;
 
-  std::deque<uint64_t> PTQ;
+  std::deque<std::pair<uint64_t, bool>> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
 
