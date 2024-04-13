@@ -204,6 +204,25 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
         num_prefetched_useful_wrong_path_conditional++;
       }
     }
+
+    if(handle_pkt.fetch_stall){
+      if (handle_pkt.num_fetch_stall < 6) {
+        useful_0_5++;
+      } else if (handle_pkt.num_fetch_stall < 12) {
+        useful_6_11++;
+      } else if (handle_pkt.num_fetch_stall < 18) {
+        useful_12_17++;
+      } else if (handle_pkt.num_fetch_stall < 24) {
+        useful_18_23++;
+      } else if (handle_pkt.num_fetch_stall < 30) {
+        useful_24_29++;
+      } else if (handle_pkt.num_fetch_stall < 36) {
+        useful_30_35++;
+      } else {
+        useful_above++;
+      }
+    }
+
     pf_useful++;
     hit_block.prefetch = 0;
   }
@@ -238,10 +257,28 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // Mark the prefetch as useful
       if (mshr_entry->pf_origin_level == fill_level){
         pf_useful++;
-        if(handle_pkt.fetch_stall){
+        if(mshr_entry->fetch_stall){
           num_prefetched_useful_wrong_path++;
-          if(handle_pkt.conditional_bm){
+          if(mshr_entry->conditional_bm){
             num_prefetched_useful_wrong_path_conditional++;
+          }
+        }
+
+        if(mshr_entry->fetch_stall){
+          if (mshr_entry->num_fetch_stall < 6) {
+            useful_0_5++;
+          } else if (mshr_entry->num_fetch_stall < 12) {
+            useful_6_11++;
+          } else if (mshr_entry->num_fetch_stall < 18) {
+            useful_12_17++;
+          } else if (mshr_entry->num_fetch_stall < 24) {
+            useful_18_23++;
+          } else if (mshr_entry->num_fetch_stall < 30) {
+            useful_24_29++;
+          } else if (mshr_entry->num_fetch_stall < 36) {
+            useful_30_35++;
+          } else {
+            useful_above++;
           }
         }
       }
@@ -341,6 +378,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           num_prefetched_useless_wrong_path_conditional++;
         }
       }
+      if(handle_pkt.fetch_stall){
+        if (handle_pkt.num_fetch_stall < 6) {
+            useless_0_5++;
+        } else if (handle_pkt.num_fetch_stall < 12) {
+            useless_6_11++;
+        } else if (handle_pkt.num_fetch_stall < 18) {
+            useless_12_17++;
+        } else if (handle_pkt.num_fetch_stall < 24) {
+            useless_18_23++;
+        } else if (handle_pkt.num_fetch_stall < 30) {
+            useless_24_29++;
+        } else if (handle_pkt.num_fetch_stall < 36) {
+            useless_30_35++;
+        } else {
+            useless_above++;
+        }
+      }
     }
 
     if (handle_pkt.type == PREFETCH)
@@ -372,24 +426,24 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
-    // Collect miss stat
-    if(handle_pkt.fetch_stall){
-      if (handle_pkt.num_fetch_stall < 6) {
-        misses_0_5++;
-      } else if (handle_pkt.num_fetch_stall < 12) {
-          misses_6_11++;
-      } else if (handle_pkt.num_fetch_stall < 18) {
-          misses_12_17++;
-      } else if (handle_pkt.num_fetch_stall < 24) {
-          misses_18_23++;
-      } else if (handle_pkt.num_fetch_stall < 30) {
-          misses_24_29++;
-      } else if (handle_pkt.num_fetch_stall < 36) {
-          misses_30_35++;
-      } else {
-          misses_above++;
-      }
+  // Collect miss stat
+  if(handle_pkt.fetch_stall){
+    if (handle_pkt.num_fetch_stall < 6) {
+      misses_0_5++;
+    } else if (handle_pkt.num_fetch_stall < 12) {
+        misses_6_11++;
+    } else if (handle_pkt.num_fetch_stall < 18) {
+        misses_12_17++;
+    } else if (handle_pkt.num_fetch_stall < 24) {
+        misses_18_23++;
+    } else if (handle_pkt.num_fetch_stall < 30) {
+        misses_24_29++;
+    } else if (handle_pkt.num_fetch_stall < 36) {
+        misses_30_35++;
+    } else {
+        misses_above++;
     }
+  }
 
   return true;
 }
@@ -699,6 +753,7 @@ void CACHE::return_data(PACKET* packet)
   mshr_entry->data = packet->data;
   mshr_entry->pf_metadata = packet->pf_metadata;
   mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+
 
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;
