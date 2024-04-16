@@ -506,24 +506,16 @@ void O3_CPU::fetch_instruction()
       num_cb_to_PTQ_fetch_stall = 0;
 
       // Get stats for number of addresses accessed during fetch stall
-      if (num_addr_to_PTQ_fetch_stall == 0) {
-          num_addr_0++;
-      } else if (num_addr_to_PTQ_fetch_stall == 1) {
-          num_addr_1++;
-      } else if (num_addr_to_PTQ_fetch_stall == 2) {
-          num_addr_2++;
-      } else if (num_addr_to_PTQ_fetch_stall == 3) {
-          num_addr_3++;
-      } else if (num_addr_to_PTQ_fetch_stall == 4) {
-          num_addr_4++;
-      } else if (num_addr_to_PTQ_fetch_stall < 12) {
-          num_addr_6_11++;
-      } else if (num_addr_to_PTQ_fetch_stall < 18) {
-          num_addr_12_17++;
-      } else if (num_addr_to_PTQ_fetch_stall < 24) {
-          num_addr_18_23++;
-      } else if (num_addr_to_PTQ_fetch_stall < 29) {
-          num_addr_24_29++;
+      if (num_addr_to_PTQ_fetch_stall < 40) {
+          num_addr_0_39++;
+      } else if (num_addr_to_PTQ_fetch_stall < 80) {
+          num_addr_40_79++;
+      } else if (num_addr_to_PTQ_fetch_stall < 120) {
+          num_addr_80_119++;
+      } else if (num_addr_to_PTQ_fetch_stall < 160) {
+          num_addr_120_159++;
+      } else if (num_addr_to_PTQ_fetch_stall < 200) {
+          num_addr_160_199++;
       } else {
           num_addr_above++;
       }

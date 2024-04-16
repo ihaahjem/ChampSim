@@ -531,16 +531,16 @@ int main(int argc, char** argv)
         cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / tot_cb << endl;
         cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / tot_cb << endl;
 
-        uint64_t tot_addr = ooo_cpu[i]->num_addr_0 + ooo_cpu[i]->num_addr_1 + ooo_cpu[i]->num_addr_2 + ooo_cpu[i]->num_addr_3 + ooo_cpu[i]->num_addr_4 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_12_17 + ooo_cpu[i]->num_addr_18_23 + ooo_cpu[i]->num_addr_24_29 + ooo_cpu[i]->num_addr_above;
-        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0) / tot_addr << endl;
-        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_1) / tot_addr << endl;
-        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_2) / tot_addr << endl;
-        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_3) / tot_addr << endl;
-        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_4) / tot_addr << endl;
+        uint64_t tot_addr = ooo_cpu[i]->num_addr_0_39 + ooo_cpu[i]->num_addr_40_79 + ooo_cpu[i]->num_addr_80_119 + ooo_cpu[i]->num_addr_120_159 + ooo_cpu[i]->num_addr_160_199 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_40_792_17 + ooo_cpu[i]->num_addr_40_798_23 + ooo_cpu[i]->num_addr_80_1194_29 + ooo_cpu[i]->num_addr_above;
+        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0_39) / tot_addr << endl;
+        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_40_79) / tot_addr << endl;
+        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_80_119) / tot_addr << endl;
+        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_120_159) / tot_addr << endl;
+        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_160_199) / tot_addr << endl;
         cout << " Percentage addr num_6_11 " << (0.0 + ooo_cpu[i]->num_addr_6_11) / tot_addr << endl;
-        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_12_17) / tot_addr << endl;
-        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_18_23) / tot_addr << endl;
-        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_24_29) / tot_addr << endl;
+        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_40_792_17) / tot_addr << endl;
+        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_40_798_23) / tot_addr << endl;
+        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_80_1194_29) / tot_addr << endl;
         cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / tot_addr << endl;
 
         uint64_t tot_cycles = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;

@@ -101,16 +101,16 @@ public:
       uint64_t num_cb_26_128 = 0;
 
     uint64_t num_addr_to_PTQ_fetch_stall = 0;
-      uint64_t num_addr_0_5 = 0;
-      uint64_t num_addr_0 = 0;
-      uint64_t num_addr_1 = 0;
-      uint64_t num_addr_2 = 0;
-      uint64_t num_addr_3 = 0;
-      uint64_t num_addr_4 = 0;
+      uint64_t num_addr_0_39_5 = 0;
+      uint64_t num_addr_0_39 = 0;
+      uint64_t num_addr_40_79 = 0;
+      uint64_t num_addr_80_119 = 0;
+      uint64_t num_addr_120_159 = 0;
+      uint64_t num_addr_160_199 = 0;
       uint64_t num_addr_6_11 = 0;
-      uint64_t num_addr_12_17 = 0;
-      uint64_t num_addr_18_23 = 0;
-      uint64_t num_addr_24_29 = 0;
+      uint64_t num_addr_40_792_17 = 0;
+      uint64_t num_addr_40_798_23 = 0;
+      uint64_t num_addr_80_1194_29 = 0;
       uint64_t num_addr_above = 0;
 
     //time to fetch after bm resolved that has not been prefetched
