@@ -39,15 +39,14 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
 }
 
 void O3_CPU::prefetcher_cycle_operate() {
-  // Perform prefetching of what is in the prefetch queue every cycle.
-  if (PTQ.size()) {
+  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
+  // Perform prefetching of what is in the prefetch queue every cycle as long as there is room in VAPQ
+  if (PTQ.size() && !L1I->VAPQ.full()) {
     std::pair<uint64_t, bool> element = PTQ.at(ptq_prefetch_entry);
     // // Check if it is recently prefetched
     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), element.first);
     if(it == recently_prefetched.end()){
 
-      #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-      
       // Prefetch if it is not already in L1I
       uint32_t set = L1I->get_set(element.first);
       uint32_t way = L1I->get_way(element.first,set);
