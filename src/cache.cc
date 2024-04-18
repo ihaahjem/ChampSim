@@ -198,31 +198,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
-    if(handle_pkt.fetch_stall){
-      num_prefetched_useful_wrong_path++;
-      if(handle_pkt.conditional_bm){
-        num_prefetched_useful_wrong_path_conditional++;
-      }
-    }
-
-    if(handle_pkt.fetch_stall){
-      if (handle_pkt.num_fetch_stall < 6) {
-        useful_0_5++;
-      } else if (handle_pkt.num_fetch_stall < 12) {
-        useful_6_11++;
-      } else if (handle_pkt.num_fetch_stall < 18) {
-        useful_12_17++;
-      } else if (handle_pkt.num_fetch_stall < 24) {
-        useful_18_23++;
-      } else if (handle_pkt.num_fetch_stall < 30) {
-        useful_24_29++;
-      } else if (handle_pkt.num_fetch_stall < 36) {
-        useful_30_35++;
-      } else {
-        useful_above++;
-      }
-    }
-
+    collect_useful_stats(&handle_pkt);
     pf_useful++;
     hit_block.prefetch = 0;
   }
@@ -257,30 +233,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // Mark the prefetch as useful
       if (mshr_entry->pf_origin_level == fill_level){
         pf_useful++;
-        if(mshr_entry->fetch_stall){
-          num_prefetched_useful_wrong_path++;
-          if(mshr_entry->conditional_bm){
-            num_prefetched_useful_wrong_path_conditional++;
-          }
-        }
-
-        if(mshr_entry->fetch_stall){
-          if (mshr_entry->num_fetch_stall < 6) {
-            useful_0_5++;
-          } else if (mshr_entry->num_fetch_stall < 12) {
-            useful_6_11++;
-          } else if (mshr_entry->num_fetch_stall < 18) {
-            useful_12_17++;
-          } else if (mshr_entry->num_fetch_stall < 24) {
-            useful_18_23++;
-          } else if (mshr_entry->num_fetch_stall < 30) {
-            useful_24_29++;
-          } else if (mshr_entry->num_fetch_stall < 36) {
-            useful_30_35++;
-          } else {
-            useful_above++;
-          }
-        }
+        collect_useful_stats(&*mshr_entry);
       }
       uint64_t prior_event_cycle = mshr_entry->event_cycle;
       *mshr_entry = handle_pkt;
@@ -372,29 +325,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if (fill_block.prefetch){
       pf_useless++;
-      if(handle_pkt.fetch_stall){
-        num_prefetched_useless_wrong_path++;
-        if(handle_pkt.conditional_bm){
-          num_prefetched_useless_wrong_path_conditional++;
-        }
-      }
-      if(handle_pkt.fetch_stall){
-        if (handle_pkt.num_fetch_stall < 6) {
-            useless_0_5++;
-        } else if (handle_pkt.num_fetch_stall < 12) {
-            useless_6_11++;
-        } else if (handle_pkt.num_fetch_stall < 18) {
-            useless_12_17++;
-        } else if (handle_pkt.num_fetch_stall < 24) {
-            useless_18_23++;
-        } else if (handle_pkt.num_fetch_stall < 30) {
-            useless_24_29++;
-        } else if (handle_pkt.num_fetch_stall < 36) {
-            useless_30_35++;
-        } else {
-            useless_above++;
-        }
-      }
+      collect_useless_stats(&handle_pkt);
     }
 
     if (handle_pkt.type == PREFETCH)
@@ -427,23 +358,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
   // Collect miss stat
-  if(handle_pkt.fetch_stall){
-    if (handle_pkt.num_fetch_stall < 6) {
-      misses_0_5++;
-    } else if (handle_pkt.num_fetch_stall < 12) {
-        misses_6_11++;
-    } else if (handle_pkt.num_fetch_stall < 18) {
-        misses_12_17++;
-    } else if (handle_pkt.num_fetch_stall < 24) {
-        misses_18_23++;
-    } else if (handle_pkt.num_fetch_stall < 30) {
-        misses_24_29++;
-    } else if (handle_pkt.num_fetch_stall < 36) {
-        misses_30_35++;
-    } else {
-        misses_above++;
-    }
-  }
+  collect_miss_stats(&handle_pkt);
 
   return true;
 }
@@ -811,4 +726,80 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+
+// Stats
+void CACHE::collect_miss_stats(PACKET* packet){
+  if(packet->fetch_stall){
+    if (packet->num_fetch_stall < 6) {
+      misses_0_5++;
+    } else if (packet->num_fetch_stall < 12) {
+        misses_6_11++;
+    } else if (packet->num_fetch_stall < 18) {
+        misses_12_17++;
+    } else if (packet->num_fetch_stall < 24) {
+        misses_18_23++;
+    } else if (packet->num_fetch_stall < 30) {
+        misses_24_29++;
+    } else if (packet->num_fetch_stall < 36) {
+        misses_30_35++;
+    } else {
+        misses_above++;
+    }
+  }
+}
+
+
+void CACHE::collect_useless_stats(PACKET* packet){
+  if(packet->fetch_stall){
+    num_prefetched_useless_wrong_path++;
+    if(packet->conditional_bm){
+      num_prefetched_useless_wrong_path_conditional++;
+    }
+  }
+  if(packet->fetch_stall){
+    if (packet->num_fetch_stall < 6) {
+        useless_0_5++;
+    } else if (packet->num_fetch_stall < 12) {
+        useless_6_11++;
+    } else if (packet->num_fetch_stall < 18) {
+        useless_12_17++;
+    } else if (packet->num_fetch_stall < 24) {
+        useless_18_23++;
+    } else if (packet->num_fetch_stall < 30) {
+        useless_24_29++;
+    } else if (packet->num_fetch_stall < 36) {
+        useless_30_35++;
+    } else {
+        useless_above++;
+    }
+  }
+}
+
+void CACHE::collect_useful_stats(PACKET* packet){
+    if(packet->fetch_stall){
+      num_prefetched_useful_wrong_path++;
+      if(packet->conditional_bm){
+        num_prefetched_useful_wrong_path_conditional++;
+      }
+    }
+
+    if(packet->fetch_stall){
+      if (packet->num_fetch_stall < 6) {
+        useful_0_5++;
+      } else if (packet->num_fetch_stall < 12) {
+        useful_6_11++;
+      } else if (packet->num_fetch_stall < 18) {
+        useful_12_17++;
+      } else if (packet->num_fetch_stall < 24) {
+        useful_18_23++;
+      } else if (packet->num_fetch_stall < 30) {
+        useful_24_29++;
+      } else if (packet->num_fetch_stall < 36) {
+        useful_30_35++;
+      } else {
+        useful_above++;
+      }
+    }
 }

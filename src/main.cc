@@ -92,44 +92,50 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
     cout << cache->NAME;
     cout << " PREFETCH  REQUESTED: " << setw(10) << cache->pf_requested << "  ISSUED: " << setw(10) << cache->pf_issued;
     cout << "  USEFUL: " << setw(10) << cache->pf_useful << "  USELESS: " << setw(10) << cache->pf_useless << endl;
-    cout << "  USEFUL WRONG PATH: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
-    cout << "  USEFUL WRONG PATH CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
+
 
     cout << cache->NAME;
     cout << " AVERAGE MISS LATENCY: " << (1.0 * (cache->total_miss_latency)) / TOTAL_MISS << " cycles" << endl;
             
-    // Misses counters during fetch stall
-    cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
-    cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
-    cout << "Misses 12-17: " << cache->misses_12_17 << endl;
-    cout << "Misses 18-23: " << cache->misses_18_23 << endl;
-    cout << "Misses 24-29: " << cache->misses_24_29 << endl;
-    cout << "Misses 30-35: " << cache->misses_30_35 << endl;
-    cout << "Misses above: " << cache->misses_above << endl;
+    
+    if(cache->NAME == "cpu0_L1I"){
+      cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
+      cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
-    cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
-    cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
-    cout << "Useful 12-17: " << cache->useful_12_17 << endl;
-    cout << "Useful 18-23: " << cache->useful_18_23 << endl;
-    cout << "Useful 24-29: " << cache->useful_24_29 << endl;
-    cout << "Useful 30-35: " << cache->useful_30_35 << endl;
-    cout << "Useful above: " << cache->useful_above << endl;
+      // Misses counters during fetch stall
+      cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
+      cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
+      cout << "Misses 12-17: " << cache->misses_12_17 << endl;
+      cout << "Misses 18-23: " << cache->misses_18_23 << endl;
+      cout << "Misses 24-29: " << cache->misses_24_29 << endl;
+      cout << "Misses 30-35: " << cache->misses_30_35 << endl;
+      cout << "Misses above: " << cache->misses_above << endl;
 
-    cout << "useless 0-5: "   << cache->useless_0_5 << endl;
-    cout << "useless 6-11: "  << cache->useless_6_11 << endl;
-    cout << "useless 12-17: " << cache->useless_12_17 << endl;
-    cout << "useless 18-23: " << cache->useless_18_23 << endl;
-    cout << "useless 24-29: " << cache->useless_24_29 << endl;
-    cout << "useless 30-35: " << cache->useless_30_35 << endl;
-    cout << "useless above: " << cache->useless_above << endl;
+      cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
+      cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
+      cout << "Useful 12-17: " << cache->useful_12_17 << endl;
+      cout << "Useful 18-23: " << cache->useful_18_23 << endl;
+      cout << "Useful 24-29: " << cache->useful_24_29 << endl;
+      cout << "Useful 30-35: " << cache->useful_30_35 << endl;
+      cout << "Useful above: " << cache->useful_above << endl;
 
-    cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
-    cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
-    cout << "accuracy 12-17: " << (0.0 + cache->useful_12_17) / (cache->useful_12_17 + cache->useless_12_17) << endl;
-    cout << "accuracy 18-23: " << (0.0 + cache->useful_18_23) / (cache->useful_18_23 + cache->useless_18_23) << endl;
-    cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
-    cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
-    cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
+      cout << "useless 0-5: "   << cache->useless_0_5 << endl;
+      cout << "useless 6-11: "  << cache->useless_6_11 << endl;
+      cout << "useless 12-17: " << cache->useless_12_17 << endl;
+      cout << "useless 18-23: " << cache->useless_18_23 << endl;
+      cout << "useless 24-29: " << cache->useless_24_29 << endl;
+      cout << "useless 30-35: " << cache->useless_30_35 << endl;
+      cout << "useless above: " << cache->useless_above << endl;
+
+      cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
+      cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
+      cout << "accuracy 12-17: " << (0.0 + cache->useful_12_17) / (cache->useful_12_17 + cache->useless_12_17) << endl;
+      cout << "accuracy 18-23: " << (0.0 + cache->useful_18_23) / (cache->useful_18_23 + cache->useless_18_23) << endl;
+      cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
+      cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
+      cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
+    }
+
 
 
     // cout << " AVERAGE MISS LATENCY: " <<

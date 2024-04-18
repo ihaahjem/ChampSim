@@ -236,29 +236,22 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       total_rob_occupancy_at_branch_mispredict += ROB.occupancy();
       branch_type_misses[arch_instr.branch_type]++;
       if (warmup_complete[cpu]) {
-        if(predicted_branch_target == 0){
-          btb_input = std::make_pair(arch_instr.ip + 4, always_taken);
-        }else{
-          btb_input = std::make_pair(predicted_branch_target, always_taken);
-        }
-        num_empty_ftq_entries = IFETCH_BUFFER.size() - num_entries_in_ftq;
-        if(arch_instr.branch_taken == 1){
-          instrs_to_speculate_this_cycle = 0;
+
+        if(arch_instr.branch_taken == 1){ // Can not do speculations
           speculate = false;
+          instrs_to_speculate_this_cycle = 0;
         }else{
-          instrs_to_speculate_this_cycle = FETCH_WIDTH;
           speculate = true;
+          uint64_t next_target = (predicted_branch_target == 0) ? arch_instr.ip + 4 : predicted_branch_target;
+          current_btb_prediction = std::make_pair(next_target, always_taken);
         }
         
         fetch_stall = 1;
         instrs_to_read_this_cycle = 0;
         arch_instr.branch_mispredicted = 1;
 
-        cycles_fetch_first_cb_after_prf = 0;
-        start_counting_cycles = false;
-        index_start_count = 0;
 
-        // Stats
+        // STATS
         num_fetch_stall++;
         num_ftq_flush++;
         conditional_bm = false;
@@ -272,7 +265,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         }
 
         num_entries_in_ftq_when_flush += num_entries_in_ftq;
-        index_first_spec = PTQ.size();
       }
     } else {
       conditional_bm = false;
@@ -307,7 +299,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   IFETCH_BUFFER.push_back(arch_instr);
 
   if(cb_until_time_start){
-    if(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
+    if(FTQ.empty() || ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
       cb_until_time_start--;
     }
     if(cb_until_time_start == 0){
@@ -323,14 +315,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     
   // Add to prefetch_queue
   fill_prefetch_queue(arch_instr.ip);
-
-  if(fetch_stall && instrs_to_speculate_this_cycle){
-    fill_prefetch_queue(btb_input.first);
-    instrs_to_speculate_this_cycle--;
-    num_instr_fetch_stall++;
-  }
-  
-  
 
   instr_unique_id++;
 }
@@ -356,31 +340,30 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
 void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
-    std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(btb_input.first, btb_input.second);
+    std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
 
     // If it was not found in the BTB, select the next sequential instruction
-    if(btb_result.first == 0){
-      btb_result.first = btb_input.first + 4;
+    if(next_btb_prediction.first == 0){
+      next_btb_prediction.first = current_btb_prediction.first + 4;
     }
+
+    // Always fill prefetch queue with the initial input value
+    fill_prefetch_queue(current_btb_prediction.first);
+
   
     // Update the input of the BTB to the result from the BTB
-    btb_input = btb_result;
+    current_btb_prediction = next_btb_prediction;
 
-    // Fill prefetch queue with the speculation
-    fill_prefetch_queue(btb_result.first);
-    
     instrs_to_speculate_this_cycle--;
-
-    // num_empty_ftq_entries--;
 }
 
 //Check if what is being fetched is from a different cache block than the isntruction before
 void O3_CPU::new_cache_block_fetch(){
-  if(FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0 && PTQ.size() && FTQ.size()){
-        PTQ.pop_front();
-        if(ptq_prefetch_entry){
-          ptq_prefetch_entry--;
-        }
+  if(!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0){
+    PTQ.pop_front();
+    if(ptq_prefetch_entry){
+      ptq_prefetch_entry--;
+    }
   }
 }
 
@@ -477,49 +460,10 @@ void O3_CPU::fetch_instruction()
     num_ptq_flushed++;
     ptq_prefetch_entry = 0;
 
-    // Get stats for number of cb added during fetch stall
-    // Get stats for number of cache blocks added during fetch stall
+    // STATS
     if(speculate){
-      if (num_cb_to_PTQ_fetch_stall == 0) {
-          num_cb_0++;
-      } else if (num_cb_to_PTQ_fetch_stall == 1) {
-          num_cb_1++;
-      } else if (num_cb_to_PTQ_fetch_stall == 2) {
-          num_cb_2++;
-      } else if (num_cb_to_PTQ_fetch_stall == 3) {
-          num_cb_3++;
-      } else if (num_cb_to_PTQ_fetch_stall == 4) {
-          num_cb_4++;
-      } else if (num_cb_to_PTQ_fetch_stall < 11) {
-          num_cb_6_10++;
-      } else if (num_cb_to_PTQ_fetch_stall < 16) {
-          num_cb_11_15++;
-      } else if (num_cb_to_PTQ_fetch_stall < 21) {
-          num_cb_16_20++;
-      } else if (num_cb_to_PTQ_fetch_stall < 26) {
-          num_cb_21_25++;
-      } else {
-          num_cb_26_128++;
-      }
-      cb_until_time_start = num_cb_to_PTQ_fetch_stall;
-
-      num_cb_to_PTQ_fetch_stall = 0;
-
-      // Get stats for number of addresses accessed during fetch stall
-      if (num_addr_to_PTQ_fetch_stall < 40) {
-          num_addr_0_39++;
-      } else if (num_addr_to_PTQ_fetch_stall < 80) {
-          num_addr_40_79++;
-      } else if (num_addr_to_PTQ_fetch_stall < 120) {
-          num_addr_80_119++;
-      } else if (num_addr_to_PTQ_fetch_stall < 160) {
-          num_addr_120_159++;
-      } else if (num_addr_to_PTQ_fetch_stall < 200) {
-          num_addr_160_199++;
-      } else {
-          num_addr_above++;
-      }
-      num_addr_to_PTQ_fetch_stall = 0;
+      collect_cb_added__stats();
+      collect_addr_added__stats();
       speculate = false;
     }
   }
@@ -582,42 +526,15 @@ void O3_CPU::promote_to_decode()
 
     IFETCH_BUFFER.pop_front();
     FTQ.pop_front();
-    if(index_first_spec){
-      index_first_spec--;
-    }
-    if(!index_start_count && start_counting_cycles){
-      start_counting_cycles = false;
-      if (cycles_fetch_first_cb_after_prf == 0) {
-          cycles_0++;
-      } else if (cycles_fetch_first_cb_after_prf == 1) {
-          cycles_1++;
-      } else if (cycles_fetch_first_cb_after_prf == 2) {
-          cycles_2++;
-      } else if (cycles_fetch_first_cb_after_prf == 3) {
-          cycles_3++;
-      } else if (cycles_fetch_first_cb_after_prf == 4) {
-          cycles_4++;
-      } else if (cycles_fetch_first_cb_after_prf < 12) {
-          cycles_6_11++;
-      } else if (cycles_fetch_first_cb_after_prf < 18) {
-          cycles_12_17++;
-      } else if (cycles_fetch_first_cb_after_prf < 24) {
-          cycles_18_23++;
-      } else if (cycles_fetch_first_cb_after_prf < 30) {
-          cycles_24_29++;
-      } else {
-          cycles_above++;
-      }
-      cycles_fetch_first_cb_after_prf=0;
-    }
+
+    // Count the cycles until the first instr not assumed
+    count_cycles_until_fetch();
+
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
     current_block_address_ftq = FTQ.front();
 
     num_entries_in_ftq--;
-    // if(num_empty_ftq_entries < IFETCH_BUFFER.size()-1){
-    //   num_empty_ftq_entries++;
-    // }
 
     available_fetch_bandwidth--;
   }
@@ -1405,5 +1322,83 @@ void O3_CPU::print_deadlock()
     if (is_valid<LSQ_ENTRY>{}(*sq_it))
       std::cout << "[SQ] entry: " << std::distance(std::begin(SQ), sq_it) << " instr_id: " << sq_it->instr_id << " address: " << std::hex
                 << sq_it->physical_address << std::dec << " translated: " << +sq_it->translated << " fetched: " << +sq_it->fetched << std::endl;
+  }
+}
+
+
+// STATS
+void O3_CPU::collect_cb_added__stats(){
+  if(speculate){
+    if (num_cb_to_PTQ_fetch_stall == 0) {
+        num_cb_0++;
+    } else if (num_cb_to_PTQ_fetch_stall == 1) {
+        num_cb_1++;
+    } else if (num_cb_to_PTQ_fetch_stall == 2) {
+        num_cb_2++;
+    } else if (num_cb_to_PTQ_fetch_stall == 3) {
+        num_cb_3++;
+    } else if (num_cb_to_PTQ_fetch_stall == 4) {
+        num_cb_4++;
+    } else if (num_cb_to_PTQ_fetch_stall < 11) {
+        num_cb_6_10++;
+    } else if (num_cb_to_PTQ_fetch_stall < 16) {
+        num_cb_11_15++;
+    } else if (num_cb_to_PTQ_fetch_stall < 21) {
+        num_cb_16_20++;
+    } else if (num_cb_to_PTQ_fetch_stall < 26) {
+        num_cb_21_25++;
+    } else {
+        num_cb_26_128++;
+    }
+    cb_until_time_start = num_cb_to_PTQ_fetch_stall;
+    num_cb_to_PTQ_fetch_stall = 0;
+  }
+}
+
+void O3_CPU::collect_addr_added__stats(){
+  if(speculate){
+    // Get stats for number of addresses accessed during fetch stall
+    if (num_addr_to_PTQ_fetch_stall < 40) {
+        num_addr_0_39++;
+    } else if (num_addr_to_PTQ_fetch_stall < 80) {
+        num_addr_40_79++;
+    } else if (num_addr_to_PTQ_fetch_stall < 120) {
+        num_addr_80_119++;
+    } else if (num_addr_to_PTQ_fetch_stall < 160) {
+        num_addr_120_159++;
+    } else if (num_addr_to_PTQ_fetch_stall < 200) {
+        num_addr_160_199++;
+    } else {
+        num_addr_above++;
+    }
+    num_addr_to_PTQ_fetch_stall = 0;
+  }
+}
+
+void O3_CPU::count_cycles_until_fetch(){
+  if(!index_start_count && start_counting_cycles){
+    start_counting_cycles = false;
+    if (cycles_fetch_first_cb_after_prf == 0) {
+        cycles_0++;
+    } else if (cycles_fetch_first_cb_after_prf == 1) {
+        cycles_1++;
+    } else if (cycles_fetch_first_cb_after_prf == 2) {
+        cycles_2++;
+    } else if (cycles_fetch_first_cb_after_prf == 3) {
+        cycles_3++;
+    } else if (cycles_fetch_first_cb_after_prf == 4) {
+        cycles_4++;
+    } else if (cycles_fetch_first_cb_after_prf < 12) {
+        cycles_6_11++;
+    } else if (cycles_fetch_first_cb_after_prf < 18) {
+        cycles_12_17++;
+    } else if (cycles_fetch_first_cb_after_prf < 24) {
+        cycles_18_23++;
+    } else if (cycles_fetch_first_cb_after_prf < 30) {
+        cycles_24_29++;
+    } else {
+        cycles_above++;
+    }
+    cycles_fetch_first_cb_after_prf=0;
   }
 }

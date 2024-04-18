@@ -60,6 +60,11 @@ public:
   uint64_t useless_0_5 = 0, useless_6_11 = 0, useless_12_17 = 0, useless_18_23 = 0, useless_24_29 = 0, useless_30_35 = 0, useless_above = 0;
   uint64_t accuracy_0_5 = 0, accuracy_6_11 = 0, accuracy_12_17 = 0, accuracy_18_23 = 0, accuracy_24_29 = 0, accuracy_30_35 = 0, accuracy_above = 0;
 
+  // stat functions
+  void collect_miss_stats(PACKET* packet);
+  void collect_useless_stats(PACKET* packet);
+  void collect_useful_stats(PACKET* packet);
+
   // functions
   int add_rq(PACKET* packet) override;
   int add_wq(PACKET* packet) override;

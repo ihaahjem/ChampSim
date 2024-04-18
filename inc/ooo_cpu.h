@@ -51,13 +51,10 @@ public:
   #define MAX_PTQ_ENTRIES 128 // Same length as IFETCH_BUFFER.
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
   uint64_t instrs_to_speculate_this_cycle = 0;
-  uint64_t num_empty_ftq_entries = 0;
   uint64_t ptq_prefetch_entry = 0;
   uint64_t current_block_address_ftq = 0;
-  std::pair<uint64_t, uint8_t> btb_input;
+  std::pair<uint64_t, uint8_t> current_btb_prediction;
   bool speculate = false;
-
-  //
   uint64_t num_entries_in_ftq = 0;
 
   // Stats
@@ -84,7 +81,6 @@ public:
   uint64_t num_ptq_flushed = 0;
 
     // What did we prefetcch on wrong path and how many of them were useful
-    uint64_t index_first_spec = 0;
     uint64_t num_instr_fetch_stall = 0;
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
 
@@ -174,7 +170,7 @@ public:
   CacheBus ITLB_bus, DTLB_bus, L1I_bus, L1D_bus;
   CACHE* l1i;
 
-  void operate();
+  void operate() override;
 
   // functions
   void init_instruction(ooo_model_instr instr);
@@ -182,6 +178,13 @@ public:
   void fill_prefetch_queue(uint64_t ip);
   void fill_ptq_speculatively();
   void new_cache_block_fetch();
+
+  //fdip
+  void collect_prefetch_stats(bool prefetch_from_fetch_stall);
+
+  void collect_cb_added__stats();
+  void collect_addr_added__stats();
+  void count_cycles_until_fetch();
 
 
   void check_dib();
