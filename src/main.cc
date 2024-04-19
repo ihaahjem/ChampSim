@@ -92,12 +92,52 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
     cout << cache->NAME;
     cout << " PREFETCH  REQUESTED: " << setw(10) << cache->pf_requested << "  ISSUED: " << setw(10) << cache->pf_issued;
     cout << "  USEFUL: " << setw(10) << cache->pf_useful << "  USELESS: " << setw(10) << cache->pf_useless << endl;
-    cout << "  USEFUL WRONG PATH: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
-    cout << "  USEFUL WRONG PATH AFTER FLUSH: " << setw(10) << cache->num_prefetched_useful_wrong_path_after_flush << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_after_flush << endl;
-    cout << "  USEFUL WRONG PATH CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
+
 
     cout << cache->NAME;
     cout << " AVERAGE MISS LATENCY: " << (1.0 * (cache->total_miss_latency)) / TOTAL_MISS << " cycles" << endl;
+            
+    
+    if(cache->NAME == "cpu0_L1I"){
+      cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
+      cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
+
+      // Misses counters during fetch stall
+      cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
+      cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
+      cout << "Misses 12-17: " << cache->misses_12_17 << endl;
+      cout << "Misses 18-23: " << cache->misses_18_23 << endl;
+      cout << "Misses 24-29: " << cache->misses_24_29 << endl;
+      cout << "Misses 30-35: " << cache->misses_30_35 << endl;
+      cout << "Misses above: " << cache->misses_above << endl;
+
+      cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
+      cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
+      cout << "Useful 12-17: " << cache->useful_12_17 << endl;
+      cout << "Useful 18-23: " << cache->useful_18_23 << endl;
+      cout << "Useful 24-29: " << cache->useful_24_29 << endl;
+      cout << "Useful 30-35: " << cache->useful_30_35 << endl;
+      cout << "Useful above: " << cache->useful_above << endl;
+
+      cout << "useless 0-5: "   << cache->useless_0_5 << endl;
+      cout << "useless 6-11: "  << cache->useless_6_11 << endl;
+      cout << "useless 12-17: " << cache->useless_12_17 << endl;
+      cout << "useless 18-23: " << cache->useless_18_23 << endl;
+      cout << "useless 24-29: " << cache->useless_24_29 << endl;
+      cout << "useless 30-35: " << cache->useless_30_35 << endl;
+      cout << "useless above: " << cache->useless_above << endl;
+
+      cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
+      cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
+      cout << "accuracy 12-17: " << (0.0 + cache->useful_12_17) / (cache->useful_12_17 + cache->useless_12_17) << endl;
+      cout << "accuracy 18-23: " << (0.0 + cache->useful_18_23) / (cache->useful_18_23 + cache->useless_18_23) << endl;
+      cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
+      cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
+      cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
+    }
+
+
+
     // cout << " AVERAGE MISS LATENCY: " <<
     // (cache->total_miss_latency)/TOTAL_MISS << " cycles " <<
     // cache->total_miss_latency << "/" << TOTAL_MISS<< endl;
@@ -241,15 +281,6 @@ void reset_cache_stats(uint32_t cpu, CACHE* cache)
   cache->pf_useless = 0;
   cache->pf_fill = 0;
 
-  //Reset the stats I have implemented 
-  cache->num_prefetched_useful_wrong_path = 0;
-  cache->num_prefetched_useless_wrong_path = 0;
-  cache->num_prefetched_useful_wrong_path_after_flush = 0;
-  cache->num_prefetched_useless_wrong_path_after_flush = 0;
-  cache->num_prefetched_useful_wrong_path_conditional = 0;
-  cache->num_prefetched_useless_wrong_path_conditional = 0;
-
-
   cache->total_miss_latency = 0;
 
   cache->RQ_ACCESS = 0;
@@ -282,7 +313,6 @@ void finish_warmup()
     cout << "Warmup complete CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
     cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
-
     ooo_cpu[i]->begin_sim_cycle = ooo_cpu[i]->current_cycle;
     ooo_cpu[i]->begin_sim_instr = ooo_cpu[i]->num_retired;
 
@@ -290,11 +320,6 @@ void finish_warmup()
     ooo_cpu[i]->num_branch = 0;
     ooo_cpu[i]->branch_mispredictions = 0;
     ooo_cpu[i]->total_rob_occupancy_at_branch_mispredict = 0;
-
-    // Reset stats that I have added
-    ooo_cpu[i]->num_prefetched_wrong_path = 0;
-    ooo_cpu[i]->num_prefetched_wrong_path_after_flush = 0;
-    ooo_cpu[i]->num_prefetched_wrong_path_conditional = 0;
 
     for (uint32_t j = 0; j < 8; j++) {
       ooo_cpu[i]->total_branch_types[j] = 0;
@@ -438,13 +463,14 @@ int main(int argc, char** argv)
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
       // read from trace
+
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      // Continue filling the PTQ speculatively if fetch_stall = 1 before finished speculating
-      while (ooo_cpu[i]->speculate && ooo_cpu[i]->ptq_init && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
+      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
+        ooo_cpu[i]->num_instr_fetch_stall++;
       }
 
       // heartbeat information
@@ -495,32 +521,33 @@ int main(int argc, char** argv)
         cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
         cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
-        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_conditional << endl;
-        cout << " Number of block_addresses prefetched during on wrong path after ftq flush " << ooo_cpu[i]->num_prefetched_wrong_path_after_flush << endl;
+        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
         cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
+        
+        uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_128;
+        cout << " Percentage cb num_0 " << (0.0 + ooo_cpu[i]->num_cb_0) / tot_cb << endl;
+        cout << " Percentage cb num_1 " << (0.0 + ooo_cpu[i]->num_cb_1) / tot_cb << endl;
+        cout << " Percentage cb num_2 " << (0.0 + ooo_cpu[i]->num_cb_2) / tot_cb << endl;
+        cout << " Percentage cb num_3 " << (0.0 + ooo_cpu[i]->num_cb_3) / tot_cb << endl;
+        cout << " Percentage cb num_4 " << (0.0 + ooo_cpu[i]->num_cb_4) / tot_cb << endl;
+        cout << " Percentage cb num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10) / tot_cb << endl;
+        cout << " Percentage cb num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15) / tot_cb << endl;
+        cout << " Percentage cb num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20) / tot_cb << endl;
+        cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / tot_cb << endl;
+        cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / tot_cb << endl;
 
-        cout << " Percentage cb num_0 " << (0.0 + ooo_cpu[i]->num_cb_0) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_1 " << (0.0 + ooo_cpu[i]->num_cb_1) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_2 " << (0.0 + ooo_cpu[i]->num_cb_2) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_3 " << (0.0 + ooo_cpu[i]->num_cb_3) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_4 " << (0.0 + ooo_cpu[i]->num_cb_4) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / ooo_cpu[i]->num_fetch_stall << endl;
-
-        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_1) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_2) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_3) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_4) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_6_11 " << (0.0 + ooo_cpu[i]->num_addr_6_11) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_12_17) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_18_23) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_24_29) / ooo_cpu[i]->num_fetch_stall << endl;
-        cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / ooo_cpu[i]->num_fetch_stall << endl;
+        uint64_t tot_addr = ooo_cpu[i]->num_addr_0_39 + ooo_cpu[i]->num_addr_40_79 + ooo_cpu[i]->num_addr_80_119 + ooo_cpu[i]->num_addr_120_159 + ooo_cpu[i]->num_addr_160_199 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_40_792_17 + ooo_cpu[i]->num_addr_40_798_23 + ooo_cpu[i]->num_addr_80_1194_29 + ooo_cpu[i]->num_addr_above;
+        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0_39) / tot_addr << endl;
+        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_40_79) / tot_addr << endl;
+        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_80_119) / tot_addr << endl;
+        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_120_159) / tot_addr << endl;
+        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_160_199) / tot_addr << endl;
+        cout << " Percentage addr num_6_11 " << (0.0 + ooo_cpu[i]->num_addr_6_11) / tot_addr << endl;
+        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_40_792_17) / tot_addr << endl;
+        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_40_798_23) / tot_addr << endl;
+        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_80_1194_29) / tot_addr << endl;
+        cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / tot_addr << endl;
 
         uint64_t tot_cycles = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
         if (tot_cycles) {
@@ -529,14 +556,23 @@ int main(int argc, char** argv)
             cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
             cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
             cout << " cycles 4 " << (0.0 + ooo_cpu[i]->cycles_4) / tot_cycles << endl;
-            cout << " cycles 6_11 " << (0.0 + ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
+            cout << " cycles 6_11 " << (0.0 +  ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
             cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
             cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
             cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
             cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
         }
-        
 
+
+
+        // FS_prf counters
+        cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->FS_prf_0_6 << endl;
+        cout << "FS_prf 6-11: " <<  ooo_cpu[i]->FS_prf_6_11 << endl;
+        cout << "FS_prf 12-17: " << ooo_cpu[i]->FS_prf_12_17 << endl;
+        cout << "FS_prf 18-23: " << ooo_cpu[i]->FS_prf_18_23 << endl;
+        cout << "FS_prf 24-29: " << ooo_cpu[i]->FS_prf_24_29 << endl;
+        cout << "FS_prf 30-35: " << ooo_cpu[i]->FS_prf_30_35 << endl;
+        cout << "FS_prf above: " << ooo_cpu[i]->FS_prf_above << endl;
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);

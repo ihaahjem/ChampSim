@@ -12,19 +12,6 @@ void O3_CPU::prefetcher_initialize() {
 
 
 void O3_CPU::prefetcher_branch_operate(uint64_t instr_ip, uint8_t branch_type, uint64_t branch_target) {
-  
-  // Get block address of instruction from branch predictor
-  // uint64_t block_address = ((instr_ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
-
-  // // Add block to the prefetch queue if it is not already there
-  // std::deque<uint64_t>::iterator it = std::find(PTQ.begin(), PTQ.end(), block_address);
-  // if (it == PTQ.end()) {
-  //     PTQ.push_back(block_address);
-  // }
-  // if(PTQ.size() >= MAX_PQ_ENTRIES){
-  //   PTQ.pop_front();
-  // }
-
 }
 
 uint32_t O3_CPU::prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, uint8_t prefetch_hit, uint32_t metadata_in)
@@ -39,59 +26,81 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
 }
 
 void O3_CPU::prefetcher_cycle_operate() {
-  // Perform prefetching of what is in the prefetch queue every cycle.
-  if (!PTQ.empty()) {
-    uint64_t element = PTQ[ptq_prefetch_entry];
-    // // Check if it is recently prefetched
-    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), element);
+  // Perform prefetching of what is in the PTQ
+  if (PTQ.empty()){
+    return;
+  } 
+
+  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
+
+  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1) { // Make sure the MSHRs can handle it so prefetching does not affect demands
+    bool prefetched = false;
+    auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
+    // Check if it is recently prefetched
+    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
     if(it == recently_prefetched.end()){
-
-      #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-      
-      // Prefetch if it is not already in L1I
-      uint32_t set = L1I->get_set(element);
-      uint32_t way = L1I->get_way(element,set);
+      // Check if cache block already in L1I
+      uint32_t set = L1I->get_set(block_address);
+      uint32_t way = L1I->get_way(block_address,set);
       if(way == L1I->NUM_WAY){
-        bool is_wrong_path = (index_first_spec == 0 && num_instr_fetch_stall > 0);
-        L1I->prefetch_line(element, true, 0, is_wrong_path, conditional_bm, wp_after_ftqflush);
-
-        // Update wrong path counters.
-        if (is_wrong_path) {
-          num_prefetched_wrong_path++;
-          if (conditional_bm) {
-            num_prefetched_wrong_path_conditional++;
-          }
-        }
-        if (wp_after_ftqflush) {
-          num_prefetched_wrong_path_after_flush++;
-        }
-      }
+        // Prefetch
+        prefetched = L1I->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
       
-      // Update recently prefetched queue.
-      recently_prefetched.push_back(element);
-      if (recently_prefetched.size() > MAX_RECENTLY_PREFETCHED_ENTRIES) {
-        recently_prefetched.pop_front();
+        // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
+        if(prefetched){
+          recently_prefetched.push_back(block_address);
+          if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+            recently_prefetched.pop_front();
+          }
+          collect_prefetch_stats(added_during_fetch_stall);
+        }
+      }else{
+        // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
+        prefetched = true;
+      }
+      }
+    // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
+    // move the counter pointing to the entry to be prefetched
+    if(prefetched || it != recently_prefetched.end()){
+      if(ptq_prefetch_entry < PTQ.size() - 1){
+        ptq_prefetch_entry++;
       }
     }
-    
-    // Update prefetch entry index for next cycle.
-    if (ptq_prefetch_entry < PTQ.size() - 1) {
-      ptq_prefetch_entry++;
-    }
-
-    if(index_first_spec == 0 && num_instr_fetch_stall > 0){
-      if(num_instr_fetch_stall == 1){
-        wp_after_ftqflush = true;
-      }
-      num_instr_fetch_stall--;
-    }
-
-    if(index_first_spec > 0){
-      index_first_spec--;
-    }
-
   }
 }
 
 void O3_CPU::prefetcher_final_stats() {}
 
+
+
+// Stat functions
+void O3_CPU::collect_prefetch_stats(bool added_during_fetch_stall) {
+  if(added_during_fetch_stall){
+    //Increment number of wrong path instructions prefetched
+    num_prefetched_wrong_path++; // How many prefetches during fetch_stall in total
+    if(conditional_bm){
+      num_prefetched_wrong_path_contitional++; // How many prefetches during fetch_stall were due to conditional branch
+    }
+    fetch_stall_prf_number++; // Used to figure out how many prefetches were performed during each fetch_stall
+
+  }else{
+    if(fetch_stall_prf_number){
+      if(fetch_stall_prf_number < 6){
+        FS_prf_0_6++;
+      }else if (fetch_stall_prf_number < 12){
+        FS_prf_6_11++;
+      }else if (fetch_stall_prf_number < 18){
+        FS_prf_12_17++;
+      }else if (fetch_stall_prf_number < 23){
+        FS_prf_18_23++;
+      }else if (fetch_stall_prf_number < 30){
+        FS_prf_24_29++;
+      }else if (fetch_stall_prf_number < 36){
+        FS_prf_30_35++;
+      }else{
+        FS_prf_above++;
+      } 
+    }
+    fetch_stall_prf_number = 0;
+  }
+}

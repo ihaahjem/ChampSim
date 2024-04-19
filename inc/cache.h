@@ -53,14 +53,17 @@ public:
   uint64_t total_miss_latency = 0;
 
   // stats
-  uint64_t num_prefetched_useful_wrong_path = 0; 
-  uint64_t num_prefetched_useful_wrong_path_after_flush = 0; 
-  uint64_t num_prefetched_useful_wrong_path_conditional = 0;
-  uint64_t num_prefetched_useless_wrong_path = 0;
-  uint64_t num_prefetched_useless_wrong_path_after_flush = 0;
-  uint64_t num_prefetched_useless_wrong_path_conditional = 0;
-  
+  uint64_t num_prefetched_useful_wrong_path = 0, num_prefetched_useful_wrong_path_conditional = 0, num_prefetched_useless_wrong_path = 0, num_prefetched_useless_wrong_path_conditional = 0;
+  // Stats for prefetches that were added to PTQ during Fetch_stall 
+  uint64_t misses_0_5 = 0, misses_6_11 = 0, misses_12_17 = 0, misses_18_23 = 0, misses_24_29 = 0, misses_30_35 = 0, misses_above = 0;
+  uint64_t useful_0_5 = 0, useful_6_11 = 0, useful_12_17 = 0, useful_18_23 = 0, useful_24_29 = 0, useful_30_35 = 0, useful_above = 0;
+  uint64_t useless_0_5 = 0, useless_6_11 = 0, useless_12_17 = 0, useless_18_23 = 0, useless_24_29 = 0, useless_30_35 = 0, useless_above = 0;
+  uint64_t accuracy_0_5 = 0, accuracy_6_11 = 0, accuracy_12_17 = 0, accuracy_18_23 = 0, accuracy_24_29 = 0, accuracy_30_35 = 0, accuracy_above = 0;
 
+  // stat functions
+  void collect_miss_stats(PACKET* packet);
+  void collect_useless_stats(PACKET* packet);
+  void collect_useful_stats(PACKET* packet);
 
   // functions
   int add_rq(PACKET* packet) override;
@@ -79,7 +82,7 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   int invalidate_entry(uint64_t inval_addr);
-  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, bool wp_after_ftqflush);
+  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall);
   int prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata); // deprecated
 
   void add_mshr(PACKET* packet);

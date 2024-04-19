@@ -198,15 +198,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
-    if(handle_pkt.fetch_stall){
-      num_prefetched_useful_wrong_path++;
-      if(handle_pkt.conditional_bm){
-        num_prefetched_useful_wrong_path_conditional++;
-      }
-    }
-    if(handle_pkt.wp_after_ftqflush){
-      num_prefetched_useful_wrong_path_after_flush++;
-    }
+    collect_useful_stats(&handle_pkt);
     pf_useful++;
     hit_block.prefetch = 0;
   }
@@ -241,15 +233,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // Mark the prefetch as useful
       if (mshr_entry->pf_origin_level == fill_level){
         pf_useful++;
-        if(handle_pkt.fetch_stall){
-          num_prefetched_useful_wrong_path++;
-          if(handle_pkt.conditional_bm){
-            num_prefetched_useful_wrong_path_conditional++;
-          }
-        }
-        if(handle_pkt.wp_after_ftqflush){
-          num_prefetched_useful_wrong_path_after_flush++;
-        }
+        collect_useful_stats(&*mshr_entry);
       }
       uint64_t prior_event_cycle = mshr_entry->event_cycle;
       *mshr_entry = handle_pkt;
@@ -341,15 +325,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if (fill_block.prefetch){
       pf_useless++;
-      if(handle_pkt.fetch_stall){
-        num_prefetched_useless_wrong_path++;
-        if(handle_pkt.conditional_bm){
-          num_prefetched_useless_wrong_path_conditional++;
-        }
-      }
-      if(handle_pkt.wp_after_ftqflush){
-        num_prefetched_useless_wrong_path_after_flush++;
-      }
+      collect_useless_stats(&handle_pkt);
     }
 
     if (handle_pkt.type == PREFETCH)
@@ -381,6 +357,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
+  // Collect miss stat
+  collect_miss_stats(&handle_pkt);
 
   return true;
 }
@@ -542,7 +520,7 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, bool wp_after_ftqflush)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall)
 {
   pf_requested++;
 
@@ -557,7 +535,8 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
 
   pf_packet.fetch_stall = fetch_stall;
   pf_packet.conditional_bm = conditional_bm;
-  pf_packet.wp_after_ftqflush = wp_after_ftqflush;
+  pf_packet.num_fetch_stall = num_fetch_stall;
+
 
   if (virtual_prefetch) {
     if (!VAPQ.full()) {
@@ -589,7 +568,7 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool
               << std::endl;
     deprecate_printed = true;
   }
-  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false, false);
+  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false);
 }
 
 void CACHE::va_translate_prefetches()
@@ -690,6 +669,7 @@ void CACHE::return_data(PACKET* packet)
   mshr_entry->pf_metadata = packet->pf_metadata;
   mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
 
+
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;
     std::cout << " address: " << std::hex << (mshr_entry->address >> OFFSET_BITS) << " full_addr: " << mshr_entry->address;
@@ -746,4 +726,80 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+
+// Stats
+void CACHE::collect_miss_stats(PACKET* packet){
+  if(packet->fetch_stall){
+    if (packet->num_fetch_stall < 6) {
+      misses_0_5++;
+    } else if (packet->num_fetch_stall < 12) {
+        misses_6_11++;
+    } else if (packet->num_fetch_stall < 18) {
+        misses_12_17++;
+    } else if (packet->num_fetch_stall < 24) {
+        misses_18_23++;
+    } else if (packet->num_fetch_stall < 30) {
+        misses_24_29++;
+    } else if (packet->num_fetch_stall < 36) {
+        misses_30_35++;
+    } else {
+        misses_above++;
+    }
+  }
+}
+
+
+void CACHE::collect_useless_stats(PACKET* packet){
+  if(packet->fetch_stall){
+    num_prefetched_useless_wrong_path++;
+    if(packet->conditional_bm){
+      num_prefetched_useless_wrong_path_conditional++;
+    }
+  }
+  if(packet->fetch_stall){
+    if (packet->num_fetch_stall < 6) {
+        useless_0_5++;
+    } else if (packet->num_fetch_stall < 12) {
+        useless_6_11++;
+    } else if (packet->num_fetch_stall < 18) {
+        useless_12_17++;
+    } else if (packet->num_fetch_stall < 24) {
+        useless_18_23++;
+    } else if (packet->num_fetch_stall < 30) {
+        useless_24_29++;
+    } else if (packet->num_fetch_stall < 36) {
+        useless_30_35++;
+    } else {
+        useless_above++;
+    }
+  }
+}
+
+void CACHE::collect_useful_stats(PACKET* packet){
+    if(packet->fetch_stall){
+      num_prefetched_useful_wrong_path++;
+      if(packet->conditional_bm){
+        num_prefetched_useful_wrong_path_conditional++;
+      }
+    }
+
+    if(packet->fetch_stall){
+      if (packet->num_fetch_stall < 6) {
+        useful_0_5++;
+      } else if (packet->num_fetch_stall < 12) {
+        useful_6_11++;
+      } else if (packet->num_fetch_stall < 18) {
+        useful_12_17++;
+      } else if (packet->num_fetch_stall < 24) {
+        useful_18_23++;
+      } else if (packet->num_fetch_stall < 30) {
+        useful_24_29++;
+      } else if (packet->num_fetch_stall < 36) {
+        useful_30_35++;
+      } else {
+        useful_above++;
+      }
+    }
 }
