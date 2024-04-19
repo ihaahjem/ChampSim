@@ -385,7 +385,7 @@ void O3_CPU::fill_ptq_speculatively(){
 void O3_CPU::new_cache_block_fetch() {
   // Check if there are elements in the queue and both prefetch and compare indices are above 0.
   // If they are both above zero it means that the element has been prefetched and compared.
-  if (!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0) {
+  if (!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq) {
     PTQ.pop_front(); // Remove the front element of the queue.
 
     // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
@@ -575,6 +575,8 @@ void O3_CPU::promote_to_decode()
       DECODE_BUFFER.push_back(IFETCH_BUFFER.front());
 
     IFETCH_BUFFER.pop_front();
+
+    current_block_address_ftq = FTQ.front();
     FTQ.pop_front();
 
     if(index_start_count){
@@ -585,8 +587,10 @@ void O3_CPU::promote_to_decode()
     
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
-    current_block_address_ftq = FTQ.front();
-
+    // if(!FTQ.empty()){
+    //   current_block_address_ftq = FTQ.front();
+    // }
+    
     num_entries_in_ftq--;
 
     available_fetch_bandwidth--;
