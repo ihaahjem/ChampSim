@@ -33,40 +33,40 @@ void O3_CPU::prefetcher_cycle_operate() {
 
   #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
 
-  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1) { // Make sure the MSHRs can handle it so prefetching does not affect demands
-    bool prefetched = false;
-    auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
-    // Check if it is recently prefetched
-    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-    if(it == recently_prefetched.end()){
-      // Check if cache block already in L1I
-      uint32_t set = L1I->get_set(block_address);
-      uint32_t way = L1I->get_way(block_address,set);
-      if(way == L1I->NUM_WAY){
-        // Prefetch
-        prefetched = L1I->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
-      
-        // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
-        if(prefetched){
-          recently_prefetched.push_back(block_address);
-          if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
-            recently_prefetched.pop_front();
+  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1 && ptq_prefetch_entry < PTQ.size()) { 
+      bool prefetched = false;
+      auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
+      // Check if it is recently prefetched
+      std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+      if(it == recently_prefetched.end()){
+        // Check if cache block already in L1I
+        uint32_t set = L1I->get_set(block_address);
+        uint32_t way = L1I->get_way(block_address,set);
+        if(way == L1I->NUM_WAY){
+          // Prefetch
+          prefetched = L1I->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
+
+          // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
+          if(prefetched){
+            recently_prefetched.push_back(block_address);
+            if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+              recently_prefetched.pop_front();
+            }
+            collect_prefetch_stats(added_during_fetch_stall);
           }
-          collect_prefetch_stats(added_during_fetch_stall);
+        }else{
+          // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
+          prefetched = true;
         }
-      }else{
-        // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
-        prefetched = true;
       }
-      }
-    // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
-    // move the counter pointing to the entry to be prefetched
-    if(prefetched || it != recently_prefetched.end()){
-      if(ptq_prefetch_entry < PTQ.size() - 1){
+      // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
+      // move the counter pointing to the entry to be prefetched
+      if(prefetched || it != recently_prefetched.end()){
         ptq_prefetch_entry++;
+      // }else{
+      //   break;
       }
     }
-  }
 }
 
 void O3_CPU::prefetcher_final_stats() {}

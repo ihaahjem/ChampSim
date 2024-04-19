@@ -168,7 +168,7 @@ public:
   CacheBus ITLB_bus, DTLB_bus, L1I_bus, L1D_bus;
   CACHE* l1i;
 
-  void operate();
+  void operate() override;
 
   // functions
   void init_instruction(ooo_model_instr instr);
