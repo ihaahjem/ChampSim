@@ -33,7 +33,7 @@ void O3_CPU::prefetcher_cycle_operate() {
 
   #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
 
-  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1) { // Make sure the MSHRs can handle it so prefetching does not affect demands
+  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1 && ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
     bool prefetched = false;
     auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
     // Check if it is recently prefetched
@@ -62,9 +62,9 @@ void O3_CPU::prefetcher_cycle_operate() {
     // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
     // move the counter pointing to the entry to be prefetched
     if(prefetched || it != recently_prefetched.end()){
-      if(ptq_prefetch_entry < PTQ.size() - 1){
+      // if(ptq_prefetch_entry < PTQ.size() - 1){
         ptq_prefetch_entry++;
-      }
+      // }
     }
   }
 }
