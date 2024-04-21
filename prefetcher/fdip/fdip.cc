@@ -228,7 +228,8 @@ void O3_CPU::CycleCounter::count_cycles_until_fetched(){
 }
 
 void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
-  total_comparisons += FTQ_after_fetch_stall.size(); // How many are equal. Does not consider order
+  
+  total_entries_to_compare += FTQ_after_fetch_stall.size(); // How many are equal. Does not consider order
   uint64_t num_equal_entries = 0; // How many are equal. Does not consider order
   bool correct_order = true; // Are the equal entries in same order?
 
@@ -252,10 +253,12 @@ void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
   if(num_equal_entries > 0 && correct_order){
     num_queues_same_order++;
   }
+  total_comparisons++;
 }
 
  void O3_CPU::compare_wp_rp::compare_wp_rp_entries_print_results() {
-  cout << " Total entries compared " << total_comparisons << endl;
+  cout << " Total entries compared " << total_entries_to_compare << endl;
+  cout << " Total queues compared " << total_comparisons << endl;
   cout << " Total equal entries " << total_equal_entries << endl;
   cout << " Number of queues with same order " << num_queues_same_order << endl;
 }
