@@ -233,8 +233,8 @@ void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
   bool correct_order = true; // Are the equal entries in same order?
 
   // Find number of equal entries:
-  std::__1::deque<uint64_t>::iterator prev_equal_ptq;
-  std::__1::deque<uint64_t>::iterator prev_equal_ftq;
+  auto prev_equal_ptq = PTQ_during_fetch_stall.begin();
+  auto prev_equal_ftq = FTQ_after_fetch_stall.begin();
   for (auto it = FTQ_after_fetch_stall.begin(); it != FTQ_after_fetch_stall.end(); ++it){
     auto it_ptq = std::find(PTQ_during_fetch_stall.begin(), PTQ_during_fetch_stall.end(), *it);
     if(it_ptq != PTQ_during_fetch_stall.end()){
