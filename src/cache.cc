@@ -519,7 +519,7 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall, bool assumed_prefetched)
 {
   pf_requested++;
 
@@ -533,6 +533,7 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
   pf_packet.v_address = virtual_prefetch ? pf_addr : 0;
 
   pf_packet.fetch_stall = fetch_stall;
+  pf_packet.assumed_prefetched = assumed_prefetched;
   pf_packet.conditional_bm = conditional_bm;
   pf_packet.num_fetch_stall = num_fetch_stall;
 
@@ -746,6 +747,9 @@ void CACHE::collect_miss_stats(PACKET* packet){
     } else {
         misses_above++;
     }
+  }
+  if(packet->assumed_prefetched){
+    misses_assumed_prefetched++;
   }
 }
 

@@ -56,14 +56,30 @@ public:
   std::pair<uint64_t, uint8_t> current_btb_prediction;
   bool speculate = false;
   uint64_t num_entries_in_ftq = 0;
+  bool assumed_prefetched = false;
+
 
   // Stats
 
     // for calculation of miss rate for WP start
       bool prev_prefetch_was_fetch_stall = false;
-      uint64_t fetch_stall_prf_number = 0;
 
-      uint64_t FS_prf_0_6 = 0, FS_prf_6_11 = 0, FS_prf_12_17 = 0, FS_prf_18_23 = 0, FS_prf_24_29 = 0, FS_prf_30_35 = 0, FS_prf_above = 0;
+
+  struct compare_wp_rp {
+    std::deque<uint64_t> PTQ_during_fetch_stall;
+    std::deque<uint64_t> FTQ_after_fetch_stall;
+
+    uint64_t total_entries_to_compare = 0;
+    uint64_t total_equal_entries = 0;
+    uint64_t total_comparisons = 0;
+    uint64_t num_queues_same_order = 0;
+
+    void compare_wp_rp_entries();
+    void compare_wp_rp_entries_print_results();
+
+
+  };
+  compare_wp_rp compare_queues;
 
     // for calculation of miss rate for WP end
 
@@ -72,64 +88,102 @@ public:
   uint64_t num_ftq_flush_conditional = 0;
   uint64_t num_ftq_flush_call_return = 0;
   uint64_t num_ftq_flush_other = 0;
-  uint64_t num_prefetched_wrong_path = 0;
   uint64_t num_entries_in_ftq_when_flush = 0;
   uint64_t num_useful_prefetch_fetch_stall = 0;
   uint64_t num_cycles_fetch_stall = 0;
   bool conditional_bm = false;
-  uint64_t num_prefetched_wrong_path_contitional = 0;
   uint64_t num_ptq_flushed = 0;
+  uint64_t num_fetch_stall = 0;
 
-    // What did we prefetcch on wrong path and how many of them were useful
-    uint64_t num_instr_fetch_stall = 0;
+  // What did we prefetcch on wrong path and how many of them were useful
+  uint64_t num_instr_fetch_stall = 0;
+
+  // STAT structs
+  struct cb_to_ptq_wp {
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
 
-      uint64_t num_cb_0_5 = 0;
-      uint64_t num_cb_0 = 0;
-      uint64_t num_cb_1 = 0;
-      uint64_t num_cb_2 = 0;
-      uint64_t num_cb_3 = 0;
-      uint64_t num_cb_4 = 0;
-      uint64_t num_cb_6_10 = 0;
-      uint64_t num_cb_11_15 = 0;
-      uint64_t num_cb_16_20 = 0;
-      uint64_t num_cb_21_25 = 0;
-      uint64_t num_cb_26_128 = 0;
+    uint64_t num_cb_0 = 0;
+    uint64_t num_cb_1 = 0;
+    uint64_t num_cb_2 = 0;
+    uint64_t num_cb_3 = 0;
+    uint64_t num_cb_4 = 0;
+    uint64_t num_cb_6_10 = 0;
+    uint64_t num_cb_11_15 = 0;
+    uint64_t num_cb_16_20 = 0;
+    uint64_t num_cb_21_25 = 0;
+    uint64_t num_cb_26_128 = 0;
 
-    uint64_t num_addr_to_PTQ_fetch_stall = 0;
-      uint64_t num_addr_0_39_5 = 0;
-      uint64_t num_addr_0_39 = 0;
-      uint64_t num_addr_40_79 = 0;
-      uint64_t num_addr_80_119 = 0;
-      uint64_t num_addr_120_159 = 0;
-      uint64_t num_addr_160_199 = 0;
-      uint64_t num_addr_6_11 = 0;
-      uint64_t num_addr_40_792_17 = 0;
-      uint64_t num_addr_40_798_23 = 0;
-      uint64_t num_addr_80_1194_29 = 0;
-      uint64_t num_addr_above = 0;
+    uint64_t collect_cb_added__stats();
+    void printStatistics_cb_added();
+  };
+  cb_to_ptq_wp cbStats;
 
-    //time to fetch after bm resolved that has not been prefetched
-    uint64_t cb_until_time_start = 0;
-    uint64_t cycles_fetch_first_cb_after_prf = 0;
-    bool start_counting_cycles = false;
-    uint64_t index_start_count = 0;
-    uint64_t cycles_0_5 = 0;
-    uint64_t cycles_0 = 0;
-    uint64_t cycles_1 = 0;
-    uint64_t cycles_2 = 0;
-    uint64_t cycles_3 = 0;
-    uint64_t cycles_4 = 0;
-    uint64_t cycles_6_11 = 0;
-    uint64_t cycles_12_17 = 0;
-    uint64_t cycles_18_23 = 0;
-    uint64_t cycles_24_29 = 0;
-    uint64_t cycles_above = 0;
-    uint64_t percentage_tot = 0;
 
-      uint64_t num_fetch_stall = 0;
+  struct addr_to_ptq_wp {
+        uint64_t num_addr_to_PTQ_fetch_stall = 0;
+        uint64_t num_addr_0_39_5 = 0;
+        uint64_t num_addr_0_39 = 0;
+        uint64_t num_addr_40_79 = 0;
+        uint64_t num_addr_80_119 = 0;
+        uint64_t num_addr_120_159 = 0;
+        uint64_t num_addr_160_199 = 0;
+        uint64_t num_addr_6_11 = 0;
+        uint64_t num_addr_40_792_17 = 0;
+        uint64_t num_addr_40_798_23 = 0;
+        uint64_t num_addr_80_1194_29 = 0;
+        uint64_t num_addr_above = 0;
 
-  std::deque<std::pair<uint64_t, bool>> PTQ;
+        void collect_addr_added_stats();
+
+        void printStatistics_addr_added();
+    };
+  addr_to_ptq_wp addrStats;
+
+  //time to fetch after bm resolved that has not been prefetched
+  struct CycleCounter {
+        uint64_t cb_until_time_start = 0;
+        uint64_t cycles_fetch_first_cb_after_prf = 0;
+        bool start_counting_cycles = false;
+        uint64_t index_start_count = 0;
+        uint64_t cycles_0_5 = 0;
+        uint64_t cycles_0 = 0;
+        uint64_t cycles_1 = 0;
+        uint64_t cycles_2 = 0;
+        uint64_t cycles_3 = 0;
+        uint64_t cycles_4 = 0;
+        uint64_t cycles_6_11 = 0;
+        uint64_t cycles_12_17 = 0;
+        uint64_t cycles_18_23 = 0;
+        uint64_t cycles_24_29 = 0;
+        uint64_t cycles_above = 0;
+        uint64_t percentage_tot = 0;
+
+        void count_cycles_until_fetched();
+        void printStatistics_cycles_until_fetched();
+    };
+  CycleCounter cycleCounter; // Instance of the struct
+
+  struct prefetched_wp {
+    // Member variables
+    uint64_t num_prefetched_wrong_path = 0;
+    uint64_t num_prefetched_wrong_path_conditional = 0;
+    uint64_t fetch_stall_prf_number = 0;
+    uint64_t FS_prf_0_6 = 0, FS_prf_6_11 = 0, FS_prf_12_17 = 0, FS_prf_18_23 = 0, FS_prf_24_29 = 0, FS_prf_30_35 = 0, FS_prf_above = 0;
+
+    // Member function
+    void collect_prefetch_stats(bool added_during_fetch_stall, bool conditional_bm);
+  };
+  prefetched_wp prf_wp;
+
+  uint64_t prefetches_assumed_prefetched = 0;
+
+  
+struct ptq_entry{
+    uint64_t block_address;
+    bool added_during_fetch_stall;
+    bool assumed_prefetched;
+};
+  std::deque<ptq_entry> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
 
@@ -178,13 +232,6 @@ public:
   void fill_prefetch_queue(uint64_t ip);
   void fill_ptq_speculatively();
   void new_cache_block_fetch();
-
-  //fdip
-  void collect_prefetch_stats(bool prefetch_from_fetch_stall);
-
-  void collect_cb_added__stats();
-  void collect_addr_added__stats();
-  void count_cycles_until_fetch();
 
 
   void check_dib();

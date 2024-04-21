@@ -24,8 +24,8 @@ void O3_CPU::operate()
     num_cycles_fetch_stall++;
   }
 
-  if(start_counting_cycles){
-    cycles_fetch_first_cb_after_prf++;
+  if(cycleCounter.start_counting_cycles){
+    cycleCounter.cycles_fetch_first_cb_after_prf++;
   }
 
   retire_rob();                    // retire
@@ -298,14 +298,26 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
 
-  if(cb_until_time_start){
-    if(FTQ.empty() || ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back()){
-      cb_until_time_start--;
+  if(cycleCounter.cb_until_time_start){
+    assumed_prefetched = true;
+    if((FTQ.empty() || ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back())){
+      cycleCounter.cb_until_time_start--;
+      compare_queues.FTQ_after_fetch_stall.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
     }
-    if(cb_until_time_start == 0){
+    if(cycleCounter.cb_until_time_start == 0 && fetch_stall == 0){
       //Start counting cycles until this entry is fetched!
-      start_counting_cycles = true;
-      index_start_count = FTQ.size();
+      cycleCounter.start_counting_cycles = true;
+      cycleCounter.index_start_count = FTQ.size();
+      // Compare the queues to find how similar they are
+    }
+    if(cycleCounter.cb_until_time_start == 0 || fetch_stall == 1){
+      assumed_prefetched = false;
+      cycleCounter.cb_until_time_start = 0;
+      cycleCounter.start_counting_cycles = false;
+      cycleCounter.index_start_count = FTQ.size();
+      compare_queues.compare_wp_rp_entries();
+      compare_queues.PTQ_during_fetch_stall.clear();
+      compare_queues.FTQ_after_fetch_stall.clear();
     }
   }
 
@@ -324,17 +336,18 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
     //Check that the block address is not the same as the last block address added to PTQ
-    if((!PTQ.empty() && PTQ.back().first != block_address) || PTQ.empty()){
+    if((!PTQ.empty() && PTQ.back().block_address != block_address) || PTQ.empty()){
       
       if(fetch_stall == 1){
-        num_cb_to_PTQ_fetch_stall++;
-        PTQ.push_back({block_address, true});
+        cbStats.num_cb_to_PTQ_fetch_stall++;
+        PTQ.push_back(ptq_entry{block_address, true, assumed_prefetched});
+        compare_queues.PTQ_during_fetch_stall.push_back(block_address);
       }else{
-        PTQ.push_back({block_address, false});
+        PTQ.push_back(ptq_entry{block_address, false, assumed_prefetched});
       }
     }
     if(fetch_stall){
-      num_addr_to_PTQ_fetch_stall++;
+      addrStats.num_addr_to_PTQ_fetch_stall++;
     }
 }
 
@@ -462,8 +475,8 @@ void O3_CPU::fetch_instruction()
 
     // STATS
     if(speculate){
-      collect_cb_added__stats();
-      collect_addr_added__stats();
+      cycleCounter.cb_until_time_start = cbStats.collect_cb_added__stats();
+      addrStats.collect_addr_added_stats();
       speculate = false;
     }
   }
@@ -528,7 +541,7 @@ void O3_CPU::promote_to_decode()
     FTQ.pop_front();
 
     // Count the cycles until the first instr not assumed
-    count_cycles_until_fetch();
+    cycleCounter.count_cycles_until_fetched();
 
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
@@ -1327,78 +1340,153 @@ void O3_CPU::print_deadlock()
 
 
 // STATS
-void O3_CPU::collect_cb_added__stats(){
-  if(speculate){
-    if (num_cb_to_PTQ_fetch_stall == 0) {
-        num_cb_0++;
-    } else if (num_cb_to_PTQ_fetch_stall == 1) {
-        num_cb_1++;
-    } else if (num_cb_to_PTQ_fetch_stall == 2) {
-        num_cb_2++;
-    } else if (num_cb_to_PTQ_fetch_stall == 3) {
-        num_cb_3++;
-    } else if (num_cb_to_PTQ_fetch_stall == 4) {
-        num_cb_4++;
-    } else if (num_cb_to_PTQ_fetch_stall < 11) {
-        num_cb_6_10++;
-    } else if (num_cb_to_PTQ_fetch_stall < 16) {
-        num_cb_11_15++;
-    } else if (num_cb_to_PTQ_fetch_stall < 21) {
-        num_cb_16_20++;
-    } else if (num_cb_to_PTQ_fetch_stall < 26) {
-        num_cb_21_25++;
-    } else {
-        num_cb_26_128++;
-    }
-    cb_until_time_start = num_cb_to_PTQ_fetch_stall;
-    num_cb_to_PTQ_fetch_stall = 0;
-  }
-}
+// uint64_t O3_CPU::cb_to_ptq_wp::collect_cb_added__stats(){
+//     if (num_cb_to_PTQ_fetch_stall == 0) {
+//         num_cb_0++;
+//     } else if (num_cb_to_PTQ_fetch_stall == 1) {
+//         num_cb_1++;
+//     } else if (num_cb_to_PTQ_fetch_stall == 2) {
+//         num_cb_2++;
+//     } else if (num_cb_to_PTQ_fetch_stall == 3) {
+//         num_cb_3++;
+//     } else if (num_cb_to_PTQ_fetch_stall == 4) {
+//         num_cb_4++;
+//     } else if (num_cb_to_PTQ_fetch_stall < 11) {
+//         num_cb_6_10++;
+//     } else if (num_cb_to_PTQ_fetch_stall < 16) {
+//         num_cb_11_15++;
+//     } else if (num_cb_to_PTQ_fetch_stall < 21) {
+//         num_cb_16_20++;
+//     } else if (num_cb_to_PTQ_fetch_stall < 26) {
+//         num_cb_21_25++;
+//     } else {
+//         num_cb_26_128++;
+//     }
+//   uint64_t cb_until_time_start = num_cb_to_PTQ_fetch_stall;
+//   num_cb_to_PTQ_fetch_stall = 0;
+//   return cb_until_time_start;
+// }
 
-void O3_CPU::collect_addr_added__stats(){
-  if(speculate){
-    // Get stats for number of addresses accessed during fetch stall
-    if (num_addr_to_PTQ_fetch_stall < 40) {
-        num_addr_0_39++;
-    } else if (num_addr_to_PTQ_fetch_stall < 80) {
-        num_addr_40_79++;
-    } else if (num_addr_to_PTQ_fetch_stall < 120) {
-        num_addr_80_119++;
-    } else if (num_addr_to_PTQ_fetch_stall < 160) {
-        num_addr_120_159++;
-    } else if (num_addr_to_PTQ_fetch_stall < 200) {
-        num_addr_160_199++;
-    } else {
-        num_addr_above++;
-    }
-    num_addr_to_PTQ_fetch_stall = 0;
-  }
-}
+//  void O3_CPU::cb_to_ptq_wp::printStatistics_cb_added() {
+//         uint64_t total_cb = num_cb_0 + num_cb_1 + num_cb_2 + num_cb_3 + num_cb_4 + 
+//                             num_cb_6_10 + num_cb_11_15 + num_cb_16_20 + num_cb_21_25 + num_cb_26_128;
+//         std::cout << "Percentage cb num_0: " << static_cast<double>(num_cb_0) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_1: " << static_cast<double>(num_cb_1) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_2: " << static_cast<double>(num_cb_2) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_3: " << static_cast<double>(num_cb_3) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_4: " << static_cast<double>(num_cb_4) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_6_10: " << static_cast<double>(num_cb_6_10) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_11_15: " << static_cast<double>(num_cb_11_15) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_16_20: " << static_cast<double>(num_cb_16_20) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_21_25: " << static_cast<double>(num_cb_21_25) / total_cb << std::endl;
+//         std::cout << "Percentage cb num_26_128: " << static_cast<double>(num_cb_26_128) / total_cb << std::endl;
+// }
 
-void O3_CPU::count_cycles_until_fetch(){
-  if(!index_start_count && start_counting_cycles){
-    start_counting_cycles = false;
-    if (cycles_fetch_first_cb_after_prf == 0) {
-        cycles_0++;
-    } else if (cycles_fetch_first_cb_after_prf == 1) {
-        cycles_1++;
-    } else if (cycles_fetch_first_cb_after_prf == 2) {
-        cycles_2++;
-    } else if (cycles_fetch_first_cb_after_prf == 3) {
-        cycles_3++;
-    } else if (cycles_fetch_first_cb_after_prf == 4) {
-        cycles_4++;
-    } else if (cycles_fetch_first_cb_after_prf < 12) {
-        cycles_6_11++;
-    } else if (cycles_fetch_first_cb_after_prf < 18) {
-        cycles_12_17++;
-    } else if (cycles_fetch_first_cb_after_prf < 24) {
-        cycles_18_23++;
-    } else if (cycles_fetch_first_cb_after_prf < 30) {
-        cycles_24_29++;
-    } else {
-        cycles_above++;
-    }
-    cycles_fetch_first_cb_after_prf=0;
-  }
-}
+// void O3_CPU::addr_to_ptq_wp::collect_addr_added_stats(){
+//     // Get stats for number of addresses accessed during fetch stall
+//     if (num_addr_to_PTQ_fetch_stall < 40) {
+//         num_addr_0_39++;
+//     } else if (num_addr_to_PTQ_fetch_stall < 80) {
+//         num_addr_40_79++;
+//     } else if (num_addr_to_PTQ_fetch_stall < 120) {
+//         num_addr_80_119++;
+//     } else if (num_addr_to_PTQ_fetch_stall < 160) {
+//         num_addr_120_159++;
+//     } else if (num_addr_to_PTQ_fetch_stall < 200) {
+//         num_addr_160_199++;
+//     } else {
+//         num_addr_above++;
+//     }
+//     num_addr_to_PTQ_fetch_stall = 0;
+// }
+
+//  void O3_CPU::addr_to_ptq_wp::printStatistics_addr_added() {
+//    uint64_t tot_addr = num_addr_0_39 + num_addr_40_79 + num_addr_80_119 + num_addr_120_159 + num_addr_160_199 + num_addr_6_11 + num_addr_40_792_17 + num_addr_40_798_23 + num_addr_80_1194_29 + num_addr_above;
+//         cout << " Percentage addr num_0 " << (0.0 + num_addr_0_39) / tot_addr << endl;
+//         cout << " Percentage addr num_1 " << (0.0 + num_addr_40_79) / tot_addr << endl;
+//         cout << " Percentage addr num_2 " << (0.0 + num_addr_80_119) / tot_addr << endl;
+//         cout << " Percentage addr num_3 " << (0.0 + num_addr_120_159) / tot_addr << endl;
+//         cout << " Percentage addr num_4 " << (0.0 + num_addr_160_199) / tot_addr << endl;
+//         cout << " Percentage addr num_6_11 " << (0.0 + num_addr_6_11) / tot_addr << endl;
+//         cout << " Percentage addr num_12_17 " << (0.0 + num_addr_40_792_17) / tot_addr << endl;
+//         cout << " Percentage addr num_18_23 " << (0.0 + num_addr_40_798_23) / tot_addr << endl;
+//         cout << " Percentage addr num_24_29 " << (0.0 + num_addr_80_1194_29) / tot_addr << endl;
+//         cout << " Percentage addr num_above " << (0.0 + num_addr_above) / tot_addr << endl;
+// }
+
+// void O3_CPU::CycleCounter::count_cycles_until_fetched(){
+//   if(!index_start_count && start_counting_cycles){
+//     start_counting_cycles = false;
+//     if (cycles_fetch_first_cb_after_prf == 0) {
+//         cycles_0++;
+//     } else if (cycles_fetch_first_cb_after_prf == 1) {
+//         cycles_1++;
+//     } else if (cycles_fetch_first_cb_after_prf == 2) {
+//         cycles_2++;
+//     } else if (cycles_fetch_first_cb_after_prf == 3) {
+//         cycles_3++;
+//     } else if (cycles_fetch_first_cb_after_prf == 4) {
+//         cycles_4++;
+//     } else if (cycles_fetch_first_cb_after_prf < 12) {
+//         cycles_6_11++;
+//     } else if (cycles_fetch_first_cb_after_prf < 18) {
+//         cycles_12_17++;
+//     } else if (cycles_fetch_first_cb_after_prf < 24) {
+//         cycles_18_23++;
+//     } else if (cycles_fetch_first_cb_after_prf < 30) {
+//         cycles_24_29++;
+//     } else {
+//         cycles_above++;
+//     }
+//     cycles_fetch_first_cb_after_prf=0;
+//   }
+// }
+
+//  void O3_CPU::CycleCounter::printStatistics_cycles_until_fetched() {
+//     uint64_t tot_cycles = cycles_0 + cycles_1 + cycles_2 + cycles_3 + cycles_4 + cycles_6_11 + cycles_12_17 + cycles_18_23 + cycles_24_29 + cycles_above;
+//     if (tot_cycles) {
+//         cout << " cycles 0 " << (0.0 + cycles_0) / tot_cycles << endl;
+//         cout << " cycles 1 " << (0.0 + cycles_1) / tot_cycles << endl;
+//         cout << " cycles 2 " << (0.0 + cycles_2) / tot_cycles << endl;
+//         cout << " cycles 3 " << (0.0 + cycles_3) / tot_cycles << endl;
+//         cout << " cycles 4 " << (0.0 + cycles_4) / tot_cycles << endl;
+//         cout << " cycles 6_11 " << (0.0 +  cycles_6_11) / tot_cycles << endl;
+//         cout << " cycles 12_17 " << (0.0 + cycles_12_17) / tot_cycles << endl;
+//         cout << " cycles 18_23 " << (0.0 + cycles_18_23) / tot_cycles << endl;
+//         cout << " cycles 24_29 " << (0.0 + cycles_24_29) / tot_cycles << endl;
+//         cout << " above 29 " << (0.0 + cycles_above) / tot_cycles << endl;
+//     }
+// }
+
+// void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
+//   total_comparisons += FTQ_after_fetch_stall.size(); // How many are equal. Does not consider order
+//   uint64_t num_equal_entries = 0; // How many are equal. Does not consider order
+//   bool correct_order = true; // Are the equal entries in same order?
+
+//   // Find number of equal entries:
+//   std::__1::deque<uint64_t>::iterator prev_equal_ptq;
+//   std::__1::deque<uint64_t>::iterator prev_equal_ftq;
+//   for (auto it = FTQ_after_fetch_stall.begin(); it != FTQ_after_fetch_stall.end(); ++it){
+//     auto it_ptq = std::find(PTQ_during_fetch_stall.begin(), PTQ_during_fetch_stall.end(), *it);
+//     if(it_ptq != PTQ_during_fetch_stall.end()){
+//       if(num_equal_entries > 0){
+//         if(!(it_ptq == prev_equal_ptq + 1 && it == prev_equal_ftq + 1 )){
+//           correct_order = false;
+//         }
+//       }
+//       num_equal_entries++;
+//       prev_equal_ptq = it_ptq;
+//       prev_equal_ftq = it;
+//     }
+//   }
+//   total_equal_entries += num_equal_entries;
+//   if(num_equal_entries > 0 && correct_order){
+//     num_queues_same_order++;
+//   }
+// }
+
+//  void O3_CPU::compare_wp_rp::compare_wp_rp_entries_print_results() {
+//   cout << " Total entries compared " << total_comparisons << endl;
+//   cout << " Total equal entries " << total_equal_entries << endl;
+//   cout << " Number of queues with same order " << num_queues_same_order << endl;
+// }

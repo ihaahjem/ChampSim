@@ -103,13 +103,15 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
       cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
       // Misses counters during fetch stall
-      cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
-      cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
-      cout << "Misses 12-17: " << cache->misses_12_17 << endl;
-      cout << "Misses 18-23: " << cache->misses_18_23 << endl;
-      cout << "Misses 24-29: " << cache->misses_24_29 << endl;
-      cout << "Misses 30-35: " << cache->misses_30_35 << endl;
-      cout << "Misses above: " << cache->misses_above << endl;
+      cout << "Misses assumed prefetched "   << cache->misses_assumed_prefetched << endl;
+
+      // cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
+      // cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
+      // cout << "Misses 12-17: " << cache->misses_12_17 << endl;
+      // cout << "Misses 18-23: " << cache->misses_18_23 << endl;
+      // cout << "Misses 24-29: " << cache->misses_24_29 << endl;
+      // cout << "Misses 30-35: " << cache->misses_30_35 << endl;
+      // cout << "Misses above: " << cache->misses_above << endl;
 
       cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
       cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
@@ -520,59 +522,27 @@ int main(int argc, char** argv)
         cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
         cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
         cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
-        cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
-        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
+        cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path << endl;
+        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path_conditional << endl;
         cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
-        cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
+        cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->cbStats.num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
         
-        uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_128;
-        cout << " Percentage cb num_0 " << (0.0 + ooo_cpu[i]->num_cb_0) / tot_cb << endl;
-        cout << " Percentage cb num_1 " << (0.0 + ooo_cpu[i]->num_cb_1) / tot_cb << endl;
-        cout << " Percentage cb num_2 " << (0.0 + ooo_cpu[i]->num_cb_2) / tot_cb << endl;
-        cout << " Percentage cb num_3 " << (0.0 + ooo_cpu[i]->num_cb_3) / tot_cb << endl;
-        cout << " Percentage cb num_4 " << (0.0 + ooo_cpu[i]->num_cb_4) / tot_cb << endl;
-        cout << " Percentage cb num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10) / tot_cb << endl;
-        cout << " Percentage cb num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15) / tot_cb << endl;
-        cout << " Percentage cb num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20) / tot_cb << endl;
-        cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / tot_cb << endl;
-        cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / tot_cb << endl;
-
-        uint64_t tot_addr = ooo_cpu[i]->num_addr_0_39 + ooo_cpu[i]->num_addr_40_79 + ooo_cpu[i]->num_addr_80_119 + ooo_cpu[i]->num_addr_120_159 + ooo_cpu[i]->num_addr_160_199 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_40_792_17 + ooo_cpu[i]->num_addr_40_798_23 + ooo_cpu[i]->num_addr_80_1194_29 + ooo_cpu[i]->num_addr_above;
-        cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0_39) / tot_addr << endl;
-        cout << " Percentage addr num_1 " << (0.0 + ooo_cpu[i]->num_addr_40_79) / tot_addr << endl;
-        cout << " Percentage addr num_2 " << (0.0 + ooo_cpu[i]->num_addr_80_119) / tot_addr << endl;
-        cout << " Percentage addr num_3 " << (0.0 + ooo_cpu[i]->num_addr_120_159) / tot_addr << endl;
-        cout << " Percentage addr num_4 " << (0.0 + ooo_cpu[i]->num_addr_160_199) / tot_addr << endl;
-        cout << " Percentage addr num_6_11 " << (0.0 + ooo_cpu[i]->num_addr_6_11) / tot_addr << endl;
-        cout << " Percentage addr num_12_17 " << (0.0 + ooo_cpu[i]->num_addr_40_792_17) / tot_addr << endl;
-        cout << " Percentage addr num_18_23 " << (0.0 + ooo_cpu[i]->num_addr_40_798_23) / tot_addr << endl;
-        cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_80_1194_29) / tot_addr << endl;
-        cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / tot_addr << endl;
-
-        uint64_t tot_cycles = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
-        if (tot_cycles) {
-            cout << " cycles 0 " << (0.0 + ooo_cpu[i]->cycles_0) / tot_cycles << endl;
-            cout << " cycles 1 " << (0.0 + ooo_cpu[i]->cycles_1) / tot_cycles << endl;
-            cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
-            cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
-            cout << " cycles 4 " << (0.0 + ooo_cpu[i]->cycles_4) / tot_cycles << endl;
-            cout << " cycles 6_11 " << (0.0 +  ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
-            cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
-            cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
-            cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
-            cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
-        }
+        ooo_cpu[i]->cbStats.printStatistics_cb_added();
+        ooo_cpu[i]->addrStats.printStatistics_addr_added();
+        ooo_cpu[i]->cycleCounter.printStatistics_cycles_until_fetched();
+        ooo_cpu[i]->compare_queues.compare_wp_rp_entries_print_results();
 
 
+        // FS_prf counters. prefetches from fetch stall
+        cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->prf_wp.FS_prf_0_6 << endl;
+        cout << "FS_prf 6-11: " <<  ooo_cpu[i]->prf_wp.FS_prf_6_11 << endl;
+        cout << "FS_prf 12-17: " << ooo_cpu[i]->prf_wp.FS_prf_12_17 << endl;
+        cout << "FS_prf 18-23: " << ooo_cpu[i]->prf_wp.FS_prf_18_23 << endl;
+        cout << "FS_prf 24-29: " << ooo_cpu[i]->prf_wp.FS_prf_24_29 << endl;
+        cout << "FS_prf 30-35: " << ooo_cpu[i]->prf_wp.FS_prf_30_35 << endl;
+        cout << "FS_prf above: " << ooo_cpu[i]->prf_wp.FS_prf_above << endl;
 
-        // FS_prf counters
-        cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->FS_prf_0_6 << endl;
-        cout << "FS_prf 6-11: " <<  ooo_cpu[i]->FS_prf_6_11 << endl;
-        cout << "FS_prf 12-17: " << ooo_cpu[i]->FS_prf_12_17 << endl;
-        cout << "FS_prf 18-23: " << ooo_cpu[i]->FS_prf_18_23 << endl;
-        cout << "FS_prf 24-29: " << ooo_cpu[i]->FS_prf_24_29 << endl;
-        cout << "FS_prf 30-35: " << ooo_cpu[i]->FS_prf_30_35 << endl;
-        cout << "FS_prf above: " << ooo_cpu[i]->FS_prf_above << endl;
+        cout << "Prefetches assumed already prefetched "  <<  ooo_cpu[i]->prefetches_assumed_prefetched << endl;
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
