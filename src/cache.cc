@@ -75,6 +75,11 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
+
+      if(fill_block.prefetch){
+        collect_useful_stats(&handle_pkt);
+        fill_block.prefetch = false;
+      }
     } 
     else // MISS
     {

@@ -33,7 +33,7 @@ void O3_CPU::prefetcher_cycle_operate() {
 
   #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
 
-  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1 && ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
+  if (L1I->get_occupancy(0, 0) < L1I->get_size(0,0) >> 1 && ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
     bool prefetched = false;
     auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
     // Check if it is recently prefetched
@@ -52,6 +52,7 @@ void O3_CPU::prefetcher_cycle_operate() {
           if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
             recently_prefetched.pop_front();
           }
+          // STATS
           prf_wp.collect_prefetch_stats(added_during_fetch_stall, conditional_bm);
           if(assumed_prefetched){
             prefetches_assumed_prefetched++;

@@ -475,6 +475,7 @@ int main(int argc, char** argv)
         ooo_cpu[i]->num_instr_fetch_stall++;
       }
 
+
       // heartbeat information
       if (show_heartbeat && (ooo_cpu[i]->num_retired >= ooo_cpu[i]->next_print_instruction)) {
         float cumulative_ipc;
