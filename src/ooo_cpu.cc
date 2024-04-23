@@ -339,13 +339,15 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     if((!PTQ.empty() && PTQ.back().block_address != block_address) || PTQ.empty()){
       
       if(fetch_stall == 1){
-        cbStats.num_cb_to_PTQ_fetch_stall++;
         PTQ.push_back(ptq_entry{block_address, true, assumed_prefetched});
+        // STAT:
         compare_queues.PTQ_during_fetch_stall.push_back(block_address);
+        cbStats.num_cb_to_PTQ_fetch_stall++;
       }else{
         PTQ.push_back(ptq_entry{block_address, false, assumed_prefetched});
       }
     }
+    // STAT:
     if(fetch_stall){
       addrStats.num_addr_to_PTQ_fetch_stall++;
     }
@@ -360,7 +362,7 @@ void O3_CPU::fill_ptq_speculatively(){
       next_btb_prediction.first = current_btb_prediction.first + 4;
     }
 
-    // Always fill prefetch queue with the initial input value
+    // Fill PTQ with the prediction
     fill_prefetch_queue(current_btb_prediction.first);
 
   
@@ -370,9 +372,10 @@ void O3_CPU::fill_ptq_speculatively(){
     instrs_to_speculate_this_cycle--;
 }
 
-//Check if what is being fetched is from a different cache block than the isntruction before
+//Check if what is being fetched is from a different cache block than the instruction before
 void O3_CPU::new_cache_block_fetch(){
   if(!PTQ.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq && current_block_address_ftq > 0){
+    // Pop head of PTQ when head of FTQ corresponds to different cache block than before
     PTQ.pop_front();
     if(ptq_prefetch_entry){
       ptq_prefetch_entry--;

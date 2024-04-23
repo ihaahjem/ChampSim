@@ -31,7 +31,7 @@ void O3_CPU::prefetcher_cycle_operate() {
     return;
   } 
 
-  if (ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
+  if (ptq_prefetch_entry < PTQ.size()) { // There are entries in the PTQ that are not prefetched
     bool prefetched = false;
     auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
     // Check if it is recently prefetched
@@ -42,7 +42,6 @@ void O3_CPU::prefetcher_cycle_operate() {
       uint32_t way = l1i->get_way(block_address,set);
       if(way < l1i->NUM_WAY){
         // TODO: Figure out why this never happens. I would expect it to be found in L1I very often.
-        //       Thought: I am not checking the same cache as the one I am fetching and prefetching to? 
 
         // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
         prefetched = true;
@@ -67,11 +66,9 @@ void O3_CPU::prefetcher_cycle_operate() {
       }
     }
     // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
-    // move the counter pointing to the entry to be prefetched
+    // increment ptq_prefetch_entry
     if(prefetched || it != recently_prefetched.end()){
-      // if(ptq_prefetch_entry < PTQ.size() - 1){
         ptq_prefetch_entry++;
-      // }
     }
   }
 }
