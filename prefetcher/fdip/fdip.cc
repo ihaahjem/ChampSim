@@ -7,8 +7,8 @@
 
 
 void O3_CPU::prefetcher_initialize() { 
-  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-  std::cout << L1I->NAME << " FDIP" << std::endl; }
+  l1i = static_cast<CACHE*>(L1I_bus.lower_level);
+  std::cout << l1i->NAME << " FDIP" << std::endl; }
 
 
 void O3_CPU::prefetcher_branch_operate(uint64_t instr_ip, uint8_t branch_type, uint64_t branch_target) {
@@ -31,20 +31,18 @@ void O3_CPU::prefetcher_cycle_operate() {
     return;
   } 
 
-  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-
-  if (L1I->get_occupancy(0, 0) < L1I->MSHR_SIZE >> 1 && ptq_prefetch_entry < PTQ.size()) { 
+  if (ptq_prefetch_entry < PTQ.size()) { 
       bool prefetched = false;
       auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
       // Check if it is recently prefetched
       std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
       if(it == recently_prefetched.end()){
         // Check if cache block already in L1I
-        uint32_t set = L1I->get_set(block_address);
-        uint32_t way = L1I->get_way(block_address,set);
-        if(way == L1I->NUM_WAY){
+        uint32_t set = l1i->get_set(block_address);
+        uint32_t way = l1i->get_way(block_address,set);
+        if(way == l1i->NUM_WAY){
           // Prefetch
-          prefetched = L1I->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
+          prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
 
           // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
           if(prefetched){
@@ -63,8 +61,6 @@ void O3_CPU::prefetcher_cycle_operate() {
       // move the counter pointing to the entry to be prefetched
       if(prefetched || it != recently_prefetched.end()){
         ptq_prefetch_entry++;
-      // }else{
-      //   break;
       }
     }
 }
@@ -73,7 +69,7 @@ void O3_CPU::prefetcher_final_stats() {}
 
 
 
-// Stat functions
+// STAT functions
 void O3_CPU::collect_prefetch_stats(bool added_during_fetch_stall) {
   if(added_during_fetch_stall){
     //Increment number of wrong path instructions prefetched

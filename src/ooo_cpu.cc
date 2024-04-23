@@ -509,7 +509,7 @@ void O3_CPU::fetch_instruction()
       // Flush the ptq
       PTQ.clear();
 
-      // Reset the necessary state variables.
+      // Reset the necessary variables.
       ptq_init = false;
       ptq_prefetch_entry = 0;
       instrs_to_speculate_this_cycle = 0;
@@ -587,9 +587,6 @@ void O3_CPU::promote_to_decode()
     
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
-    // if(!FTQ.empty()){
-    //   current_block_address_ftq = FTQ.front();
-    // }
     
     num_entries_in_ftq--;
 
