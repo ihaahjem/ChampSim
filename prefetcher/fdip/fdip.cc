@@ -7,8 +7,8 @@
 
 
 void O3_CPU::prefetcher_initialize() { 
-  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-  std::cout << L1I->NAME << " FDIP" << std::endl; }
+  l1i = static_cast<CACHE*>(L1I_bus.lower_level);
+  std::cout << l1i->NAME << " FDIP" << std::endl; }
 
 
 void O3_CPU::prefetcher_branch_operate(uint64_t instr_ip, uint8_t branch_type, uint64_t branch_target) {
@@ -31,20 +31,25 @@ void O3_CPU::prefetcher_cycle_operate() {
     return;
   } 
 
-  #define L1I (static_cast<CACHE*>(L1I_bus.lower_level))
-
-  if (L1I->get_occupancy(0, 0) < L1I->get_size(0,0) >> 1 && ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
+  if (ptq_prefetch_entry < PTQ.size()) { // Make sure the MSHRs can handle it so prefetching does not affect demands
     bool prefetched = false;
     auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
     // Check if it is recently prefetched
     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
     if(it == recently_prefetched.end()){
       // Check if cache block already in L1I
-      uint32_t set = L1I->get_set(block_address);
-      uint32_t way = L1I->get_way(block_address,set);
-      if(way == L1I->NUM_WAY){
+      uint32_t set = l1i->get_set(block_address);
+      uint32_t way = l1i->get_way(block_address,set);
+      if(way < l1i->NUM_WAY){
+        // TODO: Figure out why this never happens. I would expect it to be found in L1I very often.
+        //       Thought: I am not checking the same cache as the one I am fetching and prefetching to? 
+
+        // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
+        prefetched = true;
+        times_found_in_l1i++;
+      }else{
         // Prefetch
-        prefetched = L1I->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, prf_wp.fetch_stall_prf_number, assumed_prefetched); //Three last inputs only added to collect stats
+        prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, prf_wp.fetch_stall_prf_number, assumed_prefetched); //Three last inputs only added to collect stats
       
         // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
         if(prefetched){
@@ -57,13 +62,10 @@ void O3_CPU::prefetcher_cycle_operate() {
           if(assumed_prefetched){
             prefetches_assumed_prefetched++;
           }
-          
         }
-      }else{
-        // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
-        prefetched = true;
+        times_not_found_in_l1i++;
       }
-      }
+    }
     // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
     // move the counter pointing to the entry to be prefetched
     if(prefetched || it != recently_prefetched.end()){
@@ -78,7 +80,7 @@ void O3_CPU::prefetcher_final_stats() {}
 
 
 
-// Stat functions
+// STAT functions:
 void O3_CPU::prefetched_wp::collect_prefetch_stats(bool added_during_fetch_stall, bool conditional_bm) {
   if(added_during_fetch_stall){
     //Increment number of wrong path instructions prefetched

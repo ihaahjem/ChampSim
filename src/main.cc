@@ -99,11 +99,14 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
             
     
     if(cache->NAME == "cpu0_L1I"){
-      cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
-      cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
+      // cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
+      // cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
       // Misses counters during fetch stall
-      cout << "Misses assumed prefetched "   << cache->misses_assumed_prefetched << endl;
+      // cout << "Misses assumed prefetched "   << cache->misses_assumed_prefetched << endl;
+
+      cout << "actually issued "   << cache->actually_issued << endl;
+      cout << "not issued "   << cache->not_issued << endl;
 
       // cout << "Misses 0-5: "   << cache->misses_0_5 << endl;
       // cout << "Misses 6-11: "  << cache->misses_6_11 << endl;
@@ -113,29 +116,29 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
       // cout << "Misses 30-35: " << cache->misses_30_35 << endl;
       // cout << "Misses above: " << cache->misses_above << endl;
 
-      cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
-      cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
-      cout << "Useful 12-17: " << cache->useful_12_17 << endl;
-      cout << "Useful 18-23: " << cache->useful_18_23 << endl;
-      cout << "Useful 24-29: " << cache->useful_24_29 << endl;
-      cout << "Useful 30-35: " << cache->useful_30_35 << endl;
-      cout << "Useful above: " << cache->useful_above << endl;
+      // cout << "Useful 0-5: "   << cache->useful_0_5 << endl;
+      // cout << "Useful 6-11: "  << cache->useful_6_11 << endl;
+      // cout << "Useful 12-17: " << cache->useful_12_17 << endl;
+      // cout << "Useful 18-23: " << cache->useful_18_23 << endl;
+      // cout << "Useful 24-29: " << cache->useful_24_29 << endl;
+      // cout << "Useful 30-35: " << cache->useful_30_35 << endl;
+      // cout << "Useful above: " << cache->useful_above << endl;
 
-      cout << "useless 0-5: "   << cache->useless_0_5 << endl;
-      cout << "useless 6-11: "  << cache->useless_6_11 << endl;
-      cout << "useless 12-17: " << cache->useless_12_17 << endl;
-      cout << "useless 18-23: " << cache->useless_18_23 << endl;
-      cout << "useless 24-29: " << cache->useless_24_29 << endl;
-      cout << "useless 30-35: " << cache->useless_30_35 << endl;
-      cout << "useless above: " << cache->useless_above << endl;
+      // cout << "useless 0-5: "   << cache->useless_0_5 << endl;
+      // cout << "useless 6-11: "  << cache->useless_6_11 << endl;
+      // cout << "useless 12-17: " << cache->useless_12_17 << endl;
+      // cout << "useless 18-23: " << cache->useless_18_23 << endl;
+      // cout << "useless 24-29: " << cache->useless_24_29 << endl;
+      // cout << "useless 30-35: " << cache->useless_30_35 << endl;
+      // cout << "useless above: " << cache->useless_above << endl;
 
-      cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
-      cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
-      cout << "accuracy 12-17: " << (0.0 + cache->useful_12_17) / (cache->useful_12_17 + cache->useless_12_17) << endl;
-      cout << "accuracy 18-23: " << (0.0 + cache->useful_18_23) / (cache->useful_18_23 + cache->useless_18_23) << endl;
-      cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
-      cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
-      cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
+      // cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
+      // cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
+      // cout << "accuracy 12-17: " << (0.0 + cache->useful_12_17) / (cache->useful_12_17 + cache->useless_12_17) << endl;
+      // cout << "accuracy 18-23: " << (0.0 + cache->useful_18_23) / (cache->useful_18_23 + cache->useless_18_23) << endl;
+      // cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
+      // cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
+      // cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
     }
 
 
@@ -472,6 +475,7 @@ int main(int argc, char** argv)
 
       while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
         ooo_cpu[i]->fill_ptq_speculatively();
+        // STAT:
         ooo_cpu[i]->num_instr_fetch_stall++;
       }
 
@@ -519,31 +523,34 @@ int main(int argc, char** argv)
 
         cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
-        cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
-        cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
-        cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
-        cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
-        cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path << endl;
-        cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path_conditional << endl;
-        cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
-        cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->cbStats.num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
+        // cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
+        // cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
+        // cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
+        // cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
+        // cout << " Number of block_addresses prefetched during fetch_stall " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path << endl;
+        // cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->prf_wp.num_prefetched_wrong_path_conditional << endl;
+        // cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
+        // cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->cbStats.num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
         
-        ooo_cpu[i]->cbStats.printStatistics_cb_added();
-        ooo_cpu[i]->addrStats.printStatistics_addr_added();
-        ooo_cpu[i]->cycleCounter.printStatistics_cycles_until_fetched();
-        ooo_cpu[i]->compare_queues.compare_wp_rp_entries_print_results();
+        // ooo_cpu[i]->cbStats.printStatistics_cb_added();
+        // ooo_cpu[i]->addrStats.printStatistics_addr_added();
+        // ooo_cpu[i]->cycleCounter.printStatistics_cycles_until_fetched();
+        // ooo_cpu[i]->compare_queues.compare_wp_rp_entries_print_results();
+
+        cout << "Times found in L1I (fdip function): "  <<  ooo_cpu[i]->times_found_in_l1i << endl;
+        cout << "Times not found in L1I (fdip function): " <<  ooo_cpu[i]->times_not_found_in_l1i << endl;
 
 
         // FS_prf counters. prefetches from fetch stall
-        cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->prf_wp.FS_prf_0_6 << endl;
-        cout << "FS_prf 6-11: " <<  ooo_cpu[i]->prf_wp.FS_prf_6_11 << endl;
-        cout << "FS_prf 12-17: " << ooo_cpu[i]->prf_wp.FS_prf_12_17 << endl;
-        cout << "FS_prf 18-23: " << ooo_cpu[i]->prf_wp.FS_prf_18_23 << endl;
-        cout << "FS_prf 24-29: " << ooo_cpu[i]->prf_wp.FS_prf_24_29 << endl;
-        cout << "FS_prf 30-35: " << ooo_cpu[i]->prf_wp.FS_prf_30_35 << endl;
-        cout << "FS_prf above: " << ooo_cpu[i]->prf_wp.FS_prf_above << endl;
+        // cout << "FS_prf 0-5: "  <<  ooo_cpu[i]->prf_wp.FS_prf_0_6 << endl;
+        // cout << "FS_prf 6-11: " <<  ooo_cpu[i]->prf_wp.FS_prf_6_11 << endl;
+        // cout << "FS_prf 12-17: " << ooo_cpu[i]->prf_wp.FS_prf_12_17 << endl;
+        // cout << "FS_prf 18-23: " << ooo_cpu[i]->prf_wp.FS_prf_18_23 << endl;
+        // cout << "FS_prf 24-29: " << ooo_cpu[i]->prf_wp.FS_prf_24_29 << endl;
+        // cout << "FS_prf 30-35: " << ooo_cpu[i]->prf_wp.FS_prf_30_35 << endl;
+        // cout << "FS_prf above: " << ooo_cpu[i]->prf_wp.FS_prf_above << endl;
 
-        cout << "Prefetches assumed already prefetched "  <<  ooo_cpu[i]->prefetches_assumed_prefetched << endl;
+        // cout << "Prefetches assumed already prefetched "  <<  ooo_cpu[i]->prefetches_assumed_prefetched << endl;
 
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);

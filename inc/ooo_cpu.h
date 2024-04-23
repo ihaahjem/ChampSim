@@ -47,6 +47,7 @@ public:
   const std::size_t dib_set, dib_way, dib_window;
   dib_t DIB{dib_set * dib_way};
 
+  // Added by me -- start --
   // PTQ and que for recently prefetched
   #define MAX_PTQ_ENTRIES 128 // Same length as IFETCH_BUFFER.
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
@@ -58,11 +59,16 @@ public:
   uint64_t num_entries_in_ftq = 0;
   bool assumed_prefetched = false;
 
+  // Functions
+  void fill_prefetch_queue(uint64_t ip);
+  void fill_ptq_speculatively();
+  void new_cache_block_fetch();
 
-  // Stats
 
-    // for calculation of miss rate for WP start
-      bool prev_prefetch_was_fetch_stall = false;
+  // for calculation of miss rate for WP start
+  bool prev_prefetch_was_fetch_stall = false;
+
+  uint64_t times_found_in_l1i = 0, times_not_found_in_l1i = 0;
 
 
   struct compare_wp_rp {
@@ -82,8 +88,6 @@ public:
   compare_wp_rp compare_queues;
 
     // for calculation of miss rate for WP end
-
-
   uint64_t num_ftq_flush = 0;
   uint64_t num_ftq_flush_conditional = 0;
   uint64_t num_ftq_flush_call_return = 0;
@@ -94,11 +98,8 @@ public:
   bool conditional_bm = false;
   uint64_t num_ptq_flushed = 0;
   uint64_t num_fetch_stall = 0;
-
-  // What did we prefetcch on wrong path and how many of them were useful
   uint64_t num_instr_fetch_stall = 0;
 
-  // STAT structs
   struct cb_to_ptq_wp {
     uint64_t num_cb_to_PTQ_fetch_stall = 0;
 
@@ -178,14 +179,15 @@ public:
   uint64_t prefetches_assumed_prefetched = 0;
 
   
-struct ptq_entry{
+  struct ptq_entry{
     uint64_t block_address;
     bool added_during_fetch_stall;
     bool assumed_prefetched;
-};
+  };
   std::deque<ptq_entry> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
+  // Added by me -- end --
 
   // reorder buffer, load/store queue, register file
   champsim::circular_buffer<ooo_model_instr> IFETCH_BUFFER;
@@ -228,12 +230,6 @@ struct ptq_entry{
 
   // functions
   void init_instruction(ooo_model_instr instr);
-  // PTQ
-  void fill_prefetch_queue(uint64_t ip);
-  void fill_ptq_speculatively();
-  void new_cache_block_fetch();
-
-
   void check_dib();
   void translate_fetch();
   void fetch_instruction();

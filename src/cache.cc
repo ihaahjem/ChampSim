@@ -75,11 +75,6 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
-
-      if(fill_block.prefetch){
-        collect_useful_stats(&handle_pkt);
-        fill_block.prefetch = false;
-      }
     } 
     else // MISS
     {
@@ -157,10 +152,18 @@ void CACHE::handle_prefetch()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      if(handle_pkt.fill_level == fill_level && NAME == "cpu0_L1I"){
+        not_issued++;    
+      }
+
     } else {
       bool success = readlike_miss(handle_pkt);
+
       if (!success)
         return;
+      if(handle_pkt.fill_level == fill_level && NAME == "cpu0_L1I"){
+        actually_issued++;
+      }
     }
 
     // remove this entry from PQ
@@ -201,12 +204,23 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   for (auto ret : handle_pkt.to_return)
     ret->return_data(&handle_pkt);
 
+
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
-    collect_useful_stats(&handle_pkt);
     pf_useful++;
     hit_block.prefetch = 0;
+    // collect_useful_stats(&handle_pkt);
   }
+
+  // If the the request was a prefetch and you have a hit in the same cache that you are trying to fill
+  // it is useless to do the prefetch since it is already there.
+  // if (handle_pkt.type == PREFETCH) {
+  //     if(handle_pkt.pf_origin_level == fill_level && handle_pkt.fill_level == fill_level){
+  //       // collect_useless_stats(&handle_pkt);
+  //       pf_useless++;
+  //       hit_block.prefetch = 0;      
+  //     }
+  // }
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
@@ -333,9 +347,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       collect_useless_stats(&handle_pkt);
     }
 
-    if (handle_pkt.type == PREFETCH)
+    if (handle_pkt.type == PREFETCH){
       pf_fill++;
-
+      // pf_useless++;
+      // collect_useless_stats(&handle_pkt);
+    }
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
@@ -526,6 +542,7 @@ int CACHE::add_wq(PACKET* packet)
 
 int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall, bool assumed_prefetched)
 {
+
   pf_requested++;
 
   PACKET pf_packet;
@@ -573,7 +590,7 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool
               << std::endl;
     deprecate_printed = true;
   }
-  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false);
+  return prefetch_line(pf_addr, fill_this_level, prefetch_metadata, 0, false, 0, false);
 }
 
 void CACHE::va_translate_prefetches()

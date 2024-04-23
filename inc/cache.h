@@ -60,6 +60,7 @@ public:
   uint64_t useful_0_5 = 0, useful_6_11 = 0, useful_12_17 = 0, useful_18_23 = 0, useful_24_29 = 0, useful_30_35 = 0, useful_above = 0;
   uint64_t useless_0_5 = 0, useless_6_11 = 0, useless_12_17 = 0, useless_18_23 = 0, useless_24_29 = 0, useless_30_35 = 0, useless_above = 0;
   uint64_t accuracy_0_5 = 0, accuracy_6_11 = 0, accuracy_12_17 = 0, accuracy_18_23 = 0, accuracy_24_29 = 0, accuracy_30_35 = 0, accuracy_above = 0;
+  uint64_t actually_issued = 0, not_issued = 0;
 
   // stat functions
   void collect_miss_stats(PACKET* packet);
@@ -83,6 +84,7 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   int invalidate_entry(uint64_t inval_addr);
+
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall, bool assumed_prefetched);
   int prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata); // deprecated
 
