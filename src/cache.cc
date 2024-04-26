@@ -366,7 +366,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 void CACHE::operate()
 {
   impl_prefetcher_cycle_operate();
-
   operate_writes();
   operate_reads();
 }

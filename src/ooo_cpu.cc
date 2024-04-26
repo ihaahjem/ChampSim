@@ -340,7 +340,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   num_entries_in_ftq++;
 
   // Perform queue comparison if conditions are met.
-  if (!FTQ.empty() && !PTQ.empty() && compare_index >= 0 && compare_index < PTQ.size()) {
+  if (!FTQ.empty() && !PTQ.empty()) {
     compare_queues();
   }
   
@@ -509,6 +509,7 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
+    num_entries_in_ftq = FTQ.size();
     
     if(!speculate){
       // Flush the ptq
