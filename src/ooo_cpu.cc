@@ -509,6 +509,7 @@ void O3_CPU::fetch_instruction()
   if ((fetch_stall == 1) && (current_cycle >= fetch_resume_cycle) && (fetch_resume_cycle != 0)) {
     fetch_stall = 0;
     fetch_resume_cycle = 0;
+    
     if(!speculate){
       // Flush the ptq
       PTQ.clear();
@@ -518,6 +519,7 @@ void O3_CPU::fetch_instruction()
       ptq_prefetch_entry = 0;
       instrs_to_speculate_this_cycle = 0;
     }else{
+      num_speculated_fetch_stall = 0;
       collect_cb_added__stats();
       collect_addr_added__stats();
     }

@@ -468,9 +468,10 @@ int main(int argc, char** argv)
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0){
+      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_speculated_fetch_stall < 32){
         ooo_cpu[i]->fill_ptq_speculatively();
         ooo_cpu[i]->num_instr_fetch_stall++;
+        ooo_cpu[i]->num_speculated_fetch_stall++;
       }
 
       // heartbeat information
@@ -514,8 +515,8 @@ int main(int argc, char** argv)
         cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
-        // cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
-        // cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
+        cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
+        cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
         // cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         // cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
         // cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;

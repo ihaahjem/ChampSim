@@ -58,6 +58,7 @@ public:
   std::pair<uint64_t, uint8_t> current_btb_prediction;
   bool speculate = false;
   uint64_t num_entries_in_ftq = 0;
+  uint64_t num_speculated_fetch_stall = 0;
 
 
   // STATS
