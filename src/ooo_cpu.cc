@@ -476,6 +476,7 @@ void O3_CPU::fetch_instruction()
     num_ptq_flushed++;
     ptq_prefetch_entry = 0;
     num_speculated = 0;
+    num_entries_in_ftq = FTQ.size();
 
     // STATS
     if(speculate){
