@@ -31,16 +31,13 @@ void O3_CPU::prefetcher_cycle_operate() {
     return;
   } 
 
-  if (ptq_prefetch_entry < PTQ.size()) { // There are entries in the PTQ that are not prefetched
+  if ((l1i->get_occupancy(0, 0) < l1i->get_size(0, 0) >> 1) && ptq_prefetch_entry < PTQ.size()) { // There are entries in the PTQ that are not prefetched
     bool prefetched = false;
     auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
     // Check if it is recently prefetched
     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
     if(it == recently_prefetched.end()){
-      // Check if cache block already in L1I
-      uint32_t set = l1i->get_set(block_address);
-      uint32_t way = l1i->get_way(block_address,set);
-      if(way < l1i->NUM_WAY){
+      if(l1i->hit_test(block_address)){
         // TODO: Figure out why this never happens. I would expect it to be found in L1I very often.
 
         // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
