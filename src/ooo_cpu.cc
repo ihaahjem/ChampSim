@@ -308,14 +308,20 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       //Start counting cycles until this entry is fetched!
       cycleCounter.start_counting_cycles = true;
       cycleCounter.index_start_count = FTQ.size();
-      // Compare the queues to find how similar they are
+
+      compare_queues.PTQ_during_fetch_stall.clear();
+      compare_queues.FTQ_after_fetch_stall.clear();
+
     }
     if(cycleCounter.cb_until_time_start == 0 || fetch_stall == 1){
       assumed_prefetched = false;
       cycleCounter.cb_until_time_start = 0;
       cycleCounter.start_counting_cycles = false;
       cycleCounter.index_start_count = FTQ.size();
-      compare_queues.compare_wp_rp_entries();
+      // Compare the queues
+      if(!compare_queues.PTQ_during_fetch_stall.empty() && !compare_queues.FTQ_after_fetch_stall.empty()){
+        compare_queues.compare_wp_rp_entries();
+      }
       compare_queues.PTQ_during_fetch_stall.clear();
       compare_queues.FTQ_after_fetch_stall.clear();
     }

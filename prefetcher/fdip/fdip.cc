@@ -226,7 +226,7 @@ void O3_CPU::CycleCounter::count_cycles_until_fetched(){
 
 void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
   
-  total_entries_to_compare += FTQ_after_fetch_stall.size(); // How many are equal. Does not consider order
+  total_entries_to_compare += FTQ_after_fetch_stall.size(); 
   uint64_t num_equal_entries = 0; // How many are equal. Does not consider order
   bool correct_order = true; // Are the equal entries in same order?
 

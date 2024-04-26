@@ -535,7 +535,7 @@ int main(int argc, char** argv)
         // ooo_cpu[i]->cbStats.printStatistics_cb_added();
         // ooo_cpu[i]->addrStats.printStatistics_addr_added();
         // ooo_cpu[i]->cycleCounter.printStatistics_cycles_until_fetched();
-        // ooo_cpu[i]->compare_queues.compare_wp_rp_entries_print_results();
+        ooo_cpu[i]->compare_queues.compare_wp_rp_entries_print_results();
 
         cout << "Times found in L1I (fdip function): "  <<  ooo_cpu[i]->times_found_in_l1i << endl;
         cout << "Times not found in L1I (fdip function): " <<  ooo_cpu[i]->times_not_found_in_l1i << endl;
