@@ -65,6 +65,9 @@ public:
   void collect_useless_stats(PACKET* packet);
   void collect_useful_stats(PACKET* packet);
 
+  uint32_t get_vway(uint64_t vaddr, uint32_t set);
+  bool hit_test(uint64_t addr);
+
   // functions
   int add_rq(PACKET* packet) override;
   int add_wq(PACKET* packet) override;

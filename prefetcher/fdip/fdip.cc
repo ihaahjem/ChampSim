@@ -31,16 +31,18 @@ void O3_CPU::prefetcher_cycle_operate() {
     return;
   } 
 
-  if (ptq_prefetch_entry < PTQ.size()) { 
+  if ((l1i->get_occupancy(0, 0) < l1i->get_size(0,0) >> 1) && ptq_prefetch_entry < PTQ.size()) { 
       bool prefetched = false;
       auto& [block_address, added_during_fetch_stall] = PTQ.at(ptq_prefetch_entry);
       // Check if it is recently prefetched
       std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
       if(it == recently_prefetched.end()){
         // Check if cache block already in L1I
-        uint32_t set = l1i->get_set(block_address);
-        uint32_t way = l1i->get_way(block_address,set);
-        if(way == l1i->NUM_WAY){
+        if(l1i->hit_test(block_address)){
+          // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
+          prefetched = true;
+
+        }else{
           // Prefetch
           prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
 
@@ -52,9 +54,6 @@ void O3_CPU::prefetcher_cycle_operate() {
             }
             collect_prefetch_stats(added_during_fetch_stall);
           }
-        }else{
-          // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
-          prefetched = true;
         }
       }
       // If prefetched was successful (Either found in recently prefetched, or successful prefetch),

@@ -271,13 +271,17 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       conditional_bm = false;
       // if correctly predicted taken, then we can't fetch anymore instructions
       // this cycle
-      if (arch_instr.branch_taken == 1) {
-        instrs_to_read_this_cycle = 0;
-      }
       if(!ptq_init){
         instrs_to_speculate_this_cycle = 0;
         speculate = false;
       }
+      if (arch_instr.branch_taken == 1) {
+        instrs_to_read_this_cycle = 0;
+        if(ptq_init){
+          clear_PTQ();
+        }
+      }
+
     }
     impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
     impl_last_branch_result(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
@@ -397,27 +401,27 @@ void O3_CPU::new_cache_block_fetch() {
 void O3_CPU::compare_queues(){
   //Compare back of FTQ to PTQ
   if(FTQ.back() != PTQ[compare_index].first){
-    
-    // Increment number of ptq flushes
-    num_ptq_flushed++;
+    clear_PTQ();
+  }
+}
 
-    // Flush the ptq
-    PTQ.clear();
-
-    // Reset the necessary state variables.
-    ptq_init = false;
-    ptq_prefetch_entry = 0;
-    instrs_to_speculate_this_cycle = 0;
-    speculate = false;
-
-    //Fill the ptq with entires from the ftq
-    auto copy_ptq = PTQ;
-    for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
-      copy_ptq.push_back({*it, false}); 
-    }
-    for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
-      fill_prefetch_queue(it->first);
-    }
+void O3_CPU::clear_PTQ(){
+  // Increment number of ptq flushes
+  num_ptq_flushed++;
+  // Flush the ptq
+  PTQ.clear();
+  // Reset the necessary state variables.
+  ptq_init = false;
+  ptq_prefetch_entry = 0;
+  instrs_to_speculate_this_cycle = 0;
+  speculate = false;
+  //Fill the ptq with entires from the ftq
+  auto copy_ptq = PTQ;
+  for (auto it = FTQ.begin(); it != FTQ.end(); ++it) {
+    copy_ptq.push_back({*it, false}); 
+  }
+  for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
+    fill_prefetch_queue(it->first);
   }
 }
 

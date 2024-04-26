@@ -177,6 +177,7 @@ public:
   void fill_ptq_speculatively();
   void new_cache_block_fetch();
   void compare_queues();
+  void clear_PTQ();
 
   // STAT
   void collect_prefetch_stats(bool prefetch_from_fetch_stall);

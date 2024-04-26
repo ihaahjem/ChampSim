@@ -403,6 +403,13 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set)
   return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, OFFSET_BITS)));
 }
 
+uint32_t CACHE::get_vway(uint64_t vaddr, uint32_t set)
+{
+  auto begin = std::next(block.begin(), set * NUM_WAY);
+  auto end = std::next(begin, NUM_WAY);
+  return std::distance(begin, std::find_if(begin, end, eq_v_addr<BLOCK>(vaddr, OFFSET_BITS)));
+}
+
 int CACHE::invalidate_entry(uint64_t inval_addr)
 {
   uint32_t set = get_set(inval_addr);
@@ -728,6 +735,15 @@ void CACHE::print_deadlock()
   }
 }
 
+bool CACHE::hit_test(uint64_t addr)
+{
+  auto set = get_set(addr);
+  auto way = get_vway(addr, set);
+  if (way == NUM_WAY) {
+    way = get_way(addr, set);
+  }
+  return way < NUM_WAY;
+}
 
 // Stats
 void CACHE::collect_miss_stats(PACKET* packet){
