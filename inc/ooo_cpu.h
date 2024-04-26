@@ -58,6 +58,7 @@ public:
   bool speculate = false;
   uint64_t num_entries_in_ftq = 0;
   bool assumed_prefetched = false;
+  uint64_t num_speculated = 0;
 
   // Functions
   void fill_prefetch_queue(uint64_t ip);

@@ -241,7 +241,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
           speculate = false;
           instrs_to_speculate_this_cycle = 0;
         }else{
-          speculate = false;
+          speculate = true;
           uint64_t next_target = (predicted_branch_target == 0) ? arch_instr.ip + 4 : predicted_branch_target;
           current_btb_prediction = std::make_pair(next_target, always_taken);
         }
@@ -475,6 +475,7 @@ void O3_CPU::fetch_instruction()
     PTQ.clear();
     num_ptq_flushed++;
     ptq_prefetch_entry = 0;
+    num_speculated = 0;
 
     // STATS
     if(speculate){
