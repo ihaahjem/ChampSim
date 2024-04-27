@@ -340,7 +340,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   num_entries_in_ftq++;
 
   // Perform queue comparison if conditions are met.
-  if (!FTQ.empty() && !PTQ.empty()) {
+  if (!FTQ.empty() && !PTQ.empty() && ptq_init) {
     compare_queues();
   }
   
@@ -399,6 +399,17 @@ void O3_CPU::new_cache_block_fetch() {
 }
 
 void O3_CPU::compare_queues(){
+  // Remove the following after checked:
+  if(FTQ.size() == 1){
+    for (auto it = PTQ.begin(); it != PTQ.end(); ++it) {
+      // if the current index is needed:
+      if(it->first == FTQ.back()){
+        compare_index = std::distance(PTQ.begin(), it);
+        break;
+      }
+    }
+  }
+  // remove above
   //Compare back of FTQ to PTQ
   if(FTQ.back() != PTQ[compare_index].first){
     clear_PTQ();
