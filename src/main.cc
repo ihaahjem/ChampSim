@@ -473,7 +473,7 @@ int main(int argc, char** argv)
         ooo_cpu[i]->init_instruction(traces[i]->get());
       }
 
-      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_entries_in_ftq < 128){
+      while (ooo_cpu[i]->speculate && ooo_cpu[i]->fetch_stall == 1 && ooo_cpu[i]->instrs_to_speculate_this_cycle > 0 && ooo_cpu[i]->num_entries_in_ftq < ooo_cpu[i]->IFETCH_BUFFER.size()){
         ooo_cpu[i]->fill_ptq_speculatively();
         // STAT:
         ooo_cpu[i]->num_instr_fetch_stall++;
