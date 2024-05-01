@@ -102,3 +102,39 @@ void O3_CPU::collect_prefetch_stats(bool added_during_speculation) {
     fetch_stall_prf_number = 0;
   }
 }
+
+void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
+  
+  total_entries_to_compare +=  FTQ_when_ptq_wp.size(); 
+  uint64_t num_equal_entries = 0; // How many are equal. Does not consider order
+  bool correct_order = true; // Are the equal entries in same order?
+
+  // Find number of equal entries:
+  auto prev_equal_ptq = PTQ_wp.begin();
+  auto prev_equal_ftq = FTQ_when_ptq_wp.begin();
+  for (auto it = FTQ_when_ptq_wp.begin(); it != FTQ_when_ptq_wp.end(); ++it){
+    auto it_ptq = std::find(PTQ_wp.begin(), PTQ_wp.end(), *it);
+    if(it_ptq != PTQ_wp.end()){
+      if(num_equal_entries > 0){
+        if(!(it_ptq == prev_equal_ptq + 1 && it == prev_equal_ftq + 1 )){
+          correct_order = false;
+        }
+      }
+      num_equal_entries++;
+      prev_equal_ptq = it_ptq;
+      prev_equal_ftq = it;
+    }
+  }
+  total_equal_entries += num_equal_entries;
+  if(num_equal_entries > 0 && correct_order){
+    num_queues_same_order++;
+  }
+  total_comparisons++;
+}
+
+ void O3_CPU::compare_wp_rp::compare_wp_rp_entries_print_results() {
+  cout << " Total entries compared " << total_entries_to_compare << endl;
+  cout << " Total queues compared " << total_comparisons << endl;
+  cout << " Total equal entries " << total_equal_entries << endl;
+  cout << " Number of queues with same order " << num_queues_same_order << endl;
+}

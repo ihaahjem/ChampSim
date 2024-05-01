@@ -442,6 +442,7 @@ void O3_CPU::clear_PTQ(){
   // Reset the necessary state variables.
   spec_after_fetch_stall = false;
    ptq_init = false;
+  compare_paths.compare_wp_rp_entries();
   compare_paths.PTQ_wp.clear();
   compare_paths.FTQ_when_ptq_wp.clear();
 
