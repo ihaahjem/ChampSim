@@ -127,8 +127,18 @@ public:
   uint64_t percentage_tot = 0;
 
   uint64_t num_fetch_stall = 0;
+  uint64_t blocks_speculated_after_fetch_stall = 0;
+  bool spec_after_fetch_stall = false;
+  uint64_t prefetched_spec_after_fetch_stall = 0;
 
-  std::deque<std::pair<uint64_t, bool>> PTQ;
+  struct PTQ_entry{
+    uint64_t block_address = 0;
+    bool speculated = false;
+    bool fetch_stall = false;
+  };
+  PTQ_entry ptq_entry;
+
+  std::deque<PTQ_entry> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
 

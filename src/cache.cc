@@ -198,8 +198,10 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
-    handle_pkt.fetch_stall = hit_block.speculated;
-    collect_useful_stats(&handle_pkt);
+    PACKET tmp_pkt;
+    tmp_pkt.speculated = hit_block.speculated;
+    tmp_pkt.fetch_stall = hit_block.fetch_stall;
+    collect_useful_stats(&tmp_pkt);
     pf_useful++;
     hit_block.prefetch = 0;
   }
@@ -331,7 +333,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if (fill_block.prefetch){
       pf_useless++;
       PACKET temp_packet;
-      temp_packet.fetch_stall = fill_block.speculated;
+      temp_packet.speculated = fill_block.speculated;
+      temp_packet.fetch_stall = fill_block.fetch_stall;
       collect_useless_stats(&temp_packet);
     }
 
@@ -348,7 +351,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
 
-    fill_block.speculated = handle_pkt.fetch_stall;
+    fill_block.speculated = handle_pkt.speculated;
+    fill_block.fetch_stall = handle_pkt.fetch_stall;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -535,11 +539,11 @@ int CACHE::add_wq(PACKET* packet)
   return WQ.occupancy();
 }
 
-int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall)
+int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool speculated, bool conditional_bm, uint64_t num_fetch_stall, bool fetch_stall)
 {
   pf_requested++;
 
-  if(fetch_stall){
+  if(speculated){
     requested_wp++;
   }
 
@@ -553,6 +557,7 @@ int CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefet
   pf_packet.v_address = virtual_prefetch ? pf_addr : 0;
 
   pf_packet.fetch_stall = fetch_stall;
+  pf_packet.speculated = speculated;
   pf_packet.conditional_bm = conditional_bm;
   pf_packet.num_fetch_stall = num_fetch_stall;
 
@@ -599,8 +604,12 @@ void CACHE::va_translate_prefetches()
     // move the translated prefetch over to the regular PQ
     int result = add_pq(&VAPQ.front());
 
-  if(result > 0 && VAPQ.front().fetch_stall){
+  if(result > 0 && VAPQ.front().speculated){
     issued_wp++;
+  }
+
+  if(result > 0 && VAPQ.front().speculated && !VAPQ.front().fetch_stall){
+    issued_wp_not_fetch_stall++;
   }
     // remove the prefetch from the VAPQ
     if (result != -2)
@@ -762,7 +771,7 @@ bool CACHE::hit_test(uint64_t addr)
 
 // Stats
 void CACHE::collect_miss_stats(PACKET* packet){
-  if(packet->fetch_stall){
+  if(packet->speculated){
     if (packet->num_fetch_stall < 6) {
       misses_0_5++;
     } else if (packet->num_fetch_stall < 12) {
@@ -783,13 +792,16 @@ void CACHE::collect_miss_stats(PACKET* packet){
 
 
 void CACHE::collect_useless_stats(PACKET* packet){
-  if(packet->fetch_stall){
+  if(packet->speculated){
     num_prefetched_useless_wrong_path++;
+    if(!packet->fetch_stall){
+      useless_wp_not_fetch_stall++;
+    }
     if(packet->conditional_bm){
       num_prefetched_useless_wrong_path_conditional++;
     }
   }
-  if(packet->fetch_stall){
+  if(packet->speculated){
     if (packet->num_fetch_stall < 6) {
         useless_0_5++;
     } else if (packet->num_fetch_stall < 12) {
@@ -809,14 +821,17 @@ void CACHE::collect_useless_stats(PACKET* packet){
 }
 
 void CACHE::collect_useful_stats(PACKET* packet){
-    if(packet->fetch_stall){
+    if(packet->speculated){
       num_prefetched_useful_wrong_path++;
+      if(!packet->fetch_stall){
+        useful_wp_not_fetch_stall++;
+      }
       if(packet->conditional_bm){
         num_prefetched_useful_wrong_path_conditional++;
       }
     }
 
-    if(packet->fetch_stall){
+    if(packet->speculated){
       if (packet->num_fetch_stall < 6) {
         useful_0_5++;
       } else if (packet->num_fetch_stall < 12) {

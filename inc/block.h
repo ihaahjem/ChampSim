@@ -18,6 +18,7 @@ public:
   bool scheduled = false;
 
   bool fetch_stall = false;
+  bool speculated = false;
   bool conditional_bm = false;
   uint64_t num_fetch_stall = 0;
 

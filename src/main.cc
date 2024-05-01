@@ -100,6 +100,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
     
     // if(cache->NAME == "cpu0_L1I"){
       cout << "  REQUESTED DURING SPECULATION: " << setw(10) << cache->requested_wp << "  ISSUED: " << setw(10) << cache->issued_wp << " NOT ACTUALLY ISSUED: " << setw(10) << cache->not_issued_wp << "  USEFUL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << "  ACCURACY: " << setw(10) << (0.0+cache->num_prefetched_useful_wrong_path)/(cache->num_prefetched_useful_wrong_path + cache->num_prefetched_useless_wrong_path) << endl;
+      cout << "  ISSUED DURING SPECULATION BUT NOT FETCH_STALL: " << setw(10) << cache->issued_wp_not_fetch_stall << "  USEFUL: " << setw(10) << cache->useful_wp_not_fetch_stall << "  USELESS: " << setw(10) << cache->useless_wp_not_fetch_stall << "  ACCURACY: " << setw(10) << (0.0+cache->useful_wp_not_fetch_stall)/(cache->useful_wp_not_fetch_stall + cache->useless_wp_not_fetch_stall) << endl;
     //   cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
     //   // Misses counters during fetch stall
@@ -517,11 +518,14 @@ int main(int argc, char** argv)
 
         cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
+        cout << " Blocks speculated after fetch_stall " << ooo_cpu[i]->blocks_speculated_after_fetch_stall << endl;
         // cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         // cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
         // cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
         // cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of block_addresses prefetched during speculation " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
+        cout << " Number of block_addresses prefetched during speculation after fetch_stall " << ooo_cpu[i]->prefetched_spec_after_fetch_stall << endl;
+        
         // cout << " Number of block_addresses prefetched during fetch_stall conditional " << ooo_cpu[i]->num_prefetched_wrong_path_contitional << endl;
         // cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
         // cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;

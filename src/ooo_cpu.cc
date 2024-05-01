@@ -358,16 +358,24 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
 
     //Check that the block address is not the same as the last block address added to PTQ
-    if((!PTQ.empty() && PTQ.back().first != block_address) || PTQ.empty()){
+    if((!PTQ.empty() && PTQ.back().block_address != block_address) || PTQ.empty()){
+      PTQ_entry entry;
+      entry.block_address = block_address;
       if(speculate && ptq_init){
-        num_cb_to_PTQ_fetch_stall++;
-        PTQ.push_back({block_address, true});
-      }else{
-        PTQ.push_back({block_address, false});
+        if(!spec_after_fetch_stall){
+          num_cb_to_PTQ_fetch_stall++;
+          entry.fetch_stall = true;
+        }
+        entry.speculated = true;
       }
+      PTQ.push_back(entry);
 
       if(speculate){
         compare_paths.PTQ_wp.push_back(block_address);
+      }
+
+      if(speculate && spec_after_fetch_stall){
+        blocks_speculated_after_fetch_stall++;
       }
     }
 
@@ -413,7 +421,7 @@ void O3_CPU::compare_queues(){
   if(FTQ.size() == 1){
     for (auto it = PTQ.begin(); it != PTQ.end(); ++it) {
       // if the current index is needed:
-      if(it->first == FTQ.back()){
+      if(it->block_address == FTQ.back()){
         compare_index = std::distance(PTQ.begin(), it);
         break;
       }
@@ -421,7 +429,7 @@ void O3_CPU::compare_queues(){
   }
   // remove above
   //Compare back of FTQ to PTQ
-  if(FTQ.back() != PTQ[compare_index].first){
+  if(FTQ.back() != PTQ[compare_index].block_address){
     clear_PTQ();
   }
 }
@@ -432,6 +440,7 @@ void O3_CPU::clear_PTQ(){
   // Flush the ptq
   PTQ.clear();
   // Reset the necessary state variables.
+  spec_after_fetch_stall = false;
    ptq_init = false;
   compare_paths.PTQ_wp.clear();
   compare_paths.FTQ_when_ptq_wp.clear();
@@ -446,7 +455,7 @@ void O3_CPU::clear_PTQ(){
     copy_ptq.push_back({*it, false}); 
   }
   for(auto it = copy_ptq.begin(); it != copy_ptq.end(); ++it){
-    fill_prefetch_queue(it->first);
+    fill_prefetch_queue(it->block_address);
   }
 }
 
@@ -548,6 +557,7 @@ void O3_CPU::fetch_instruction()
       num_speculated_fetch_stall = 0;
       collect_cb_added__stats();
       collect_addr_added__stats();
+      spec_after_fetch_stall = true;
     }
   }
 

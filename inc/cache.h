@@ -62,6 +62,9 @@ public:
   uint64_t requested_wp = 0;
   uint64_t issued_wp = 0;
   uint64_t not_issued_wp = 0;
+  uint64_t issued_wp_not_fetch_stall = 0;
+  uint64_t useful_wp_not_fetch_stall = 0;
+  uint64_t useless_wp_not_fetch_stall = 0;
 
   // stat functions
   void collect_miss_stats(PACKET* packet);
@@ -88,7 +91,7 @@ public:
   uint32_t get_way(uint64_t address, uint32_t set);
 
   int invalidate_entry(uint64_t inval_addr);
-  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool fetch_stall, bool conditional_bm, uint64_t num_fetch_stall);
+  int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata, bool speculated, bool conditional_bm, uint64_t num_fetch_stall, bool fetch_stall);
   int prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata); // deprecated
 
   void add_mshr(PACKET* packet);

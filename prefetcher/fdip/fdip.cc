@@ -33,7 +33,7 @@ void O3_CPU::prefetcher_cycle_operate() {
 
   if ((l1i->get_occupancy(0, 0) < l1i->get_size(0,0) >> 1) && ptq_prefetch_entry < PTQ.size()) { 
       bool prefetched = false;
-      auto& [block_address, added_during_speculation] = PTQ.at(ptq_prefetch_entry);
+      auto& [block_address, added_during_speculation, fetch_stall] = PTQ.at(ptq_prefetch_entry);
       // Check if it is recently prefetched
       std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
       if(it == recently_prefetched.end()){
@@ -44,13 +44,16 @@ void O3_CPU::prefetcher_cycle_operate() {
 
         }else{
           // Prefetch
-          prefetched = l1i->prefetch_line(block_address,true, 0, added_during_speculation, conditional_bm, fetch_stall_prf_number); //Three last inputs only added to collect stats
+          prefetched = l1i->prefetch_line(block_address,true, 0, added_during_speculation, conditional_bm, fetch_stall_prf_number, fetch_stall); //Three last inputs only added to collect stats
 
           // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
           if(prefetched){
             recently_prefetched.push_back(block_address);
             if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
               recently_prefetched.pop_front();
+            }
+            if(added_during_speculation && !fetch_stall){
+              prefetched_spec_after_fetch_stall++;
             }
             collect_prefetch_stats(added_during_speculation);
           }
