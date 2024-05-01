@@ -359,7 +359,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
     //Check that the block address is not the same as the last block address added to PTQ
     if((!PTQ.empty() && PTQ.back().first != block_address) || PTQ.empty()){
-      if(fetch_stall == 1 && ptq_init){
+      if(speculate && ptq_init){
         num_cb_to_PTQ_fetch_stall++;
         PTQ.push_back({block_address, true});
       }else{

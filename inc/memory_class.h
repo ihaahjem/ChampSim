@@ -17,7 +17,7 @@
 class BLOCK
 {
 public:
-  bool valid = false, prefetch = false, dirty = false;
+  bool valid = false, prefetch = false, dirty = false, speculated = false;
 
   uint64_t address = 0, v_address = 0, tag = 0, data = 0, ip = 0, cpu = 0, instr_id = 0;
 
