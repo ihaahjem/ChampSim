@@ -209,7 +209,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if (hit_block.prefetch) {
     pf_useful++;
     hit_block.prefetch = 0;
-    collect_useful_stats(&handle_pkt);
+    PACKET tmp_pkt;
+    tmp_pkt.fetch_stall = hit_block.speculated;
+    collect_useful_stats(&tmp_pkt);
   }
 
   // If the the request was a prefetch and you have a hit in the same cache that you are trying to fill
@@ -344,7 +346,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if (fill_block.prefetch){
       pf_useless++;
-      collect_useless_stats(&handle_pkt);
+      PACKET tmp_pkt;
+      tmp_pkt.fetch_stall = fill_block.speculated;
+      collect_useless_stats(&tmp_pkt);
     }
 
     if (handle_pkt.type == PREFETCH){
@@ -359,6 +363,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.ip = handle_pkt.ip;
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
+
+    fill_block.speculated = handle_pkt.fetch_stall;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
