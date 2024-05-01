@@ -99,7 +99,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
             
     
     if(cache->NAME == "cpu0_L1I"){
-      // cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << endl;
+      cout << "  USEFUL DURING FETCH_STALL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << "  Accuracy: " << setw(10) << (0.0+cache->num_prefetched_useful_wrong_path)/(cache->num_prefetched_useful_wrong_path + cache->num_prefetched_useless_wrong_path) << endl;
       // cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
       // Misses counters during fetch stall
@@ -123,6 +123,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
       // cout << "Useful 24-29: " << cache->useful_24_29 << endl;
       // cout << "Useful 30-35: " << cache->useful_30_35 << endl;
       // cout << "Useful above: " << cache->useful_above << endl;
+      // cout << "Useful above: " << cache->useful_wp << endl;
 
       // cout << "useless 0-5: "   << cache->useless_0_5 << endl;
       // cout << "useless 6-11: "  << cache->useless_6_11 << endl;
@@ -131,6 +132,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
       // cout << "useless 24-29: " << cache->useless_24_29 << endl;
       // cout << "useless 30-35: " << cache->useless_30_35 << endl;
       // cout << "useless above: " << cache->useless_above << endl;
+      // cout << "useless above: " << cache->useless_wp << endl;
 
       // cout << "accuracy 0-5: "   << (0.0 + cache->useful_0_5) / (cache->useful_0_5 + cache->useless_0_5) << endl;
       // cout << "accuracy 6-11: "  << (0.0 + cache->useful_6_11) / (cache->useful_6_11 + cache->useless_6_11)  << endl;
@@ -139,6 +141,7 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
       // cout << "accuracy 24-29: " << (0.0 + cache->useful_24_29) / (cache->useful_24_29 + cache->useless_24_29) << endl;
       // cout << "accuracy 30-35: " << (0.0 + cache->useful_30_35) / (cache->useful_30_35 + cache->useless_30_35)  << endl;
       // cout << "accuracy above: " << (0.0 + cache->useful_above) / (cache->useful_above + cache->useless_above)  << endl;
+      // cout << "accuracy wp: " << (0.0 + cache->useful_wp) / (cache->useful_wp + cache->useless_wp)  << endl;
     }
 
 
@@ -539,6 +542,8 @@ int main(int argc, char** argv)
 
         cout << "Times found in L1I (fdip function): "  <<  ooo_cpu[i]->times_found_in_l1i << endl;
         cout << "Times not found in L1I (fdip function): " <<  ooo_cpu[i]->times_not_found_in_l1i << endl;
+        cout << "Max instructions speculated: " <<  ooo_cpu[i]->max_instrs_speculated << endl;
+       
 
 
         // FS_prf counters. prefetches from fetch stall

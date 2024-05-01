@@ -100,6 +100,8 @@ public:
   uint64_t num_ptq_flushed = 0;
   uint64_t num_fetch_stall = 0;
   uint64_t num_instr_fetch_stall = 0;
+  uint64_t max_instrs_speculated = 0;
+
 
   struct cb_to_ptq_wp {
     uint64_t num_cb_to_PTQ_fetch_stall = 0;

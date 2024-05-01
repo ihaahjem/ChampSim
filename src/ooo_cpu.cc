@@ -484,6 +484,11 @@ void O3_CPU::fetch_instruction()
     num_speculated = 0;
     num_entries_in_ftq = FTQ.size();
 
+    if(num_instr_fetch_stall > max_instrs_speculated){
+      max_instrs_speculated = num_instr_fetch_stall;
+    }
+    num_instr_fetch_stall = 0;
+
     // STATS
     if(speculate){
       cycleCounter.cb_until_time_start = cbStats.collect_cb_added__stats();

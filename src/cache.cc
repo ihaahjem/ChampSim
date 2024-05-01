@@ -209,7 +209,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if (hit_block.prefetch) {
     pf_useful++;
     hit_block.prefetch = 0;
-    // collect_useful_stats(&handle_pkt);
+    collect_useful_stats(&handle_pkt);
   }
 
   // If the the request was a prefetch and you have a hit in the same cache that you are trying to fill
@@ -349,8 +349,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if (handle_pkt.type == PREFETCH){
       pf_fill++;
-      // pf_useless++;
-      // collect_useless_stats(&handle_pkt);
     }
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
@@ -816,6 +814,7 @@ void CACHE::collect_useless_stats(PACKET* packet){
     } else {
         useless_above++;
     }
+    useless_wp++;
   }
 }
 
@@ -843,5 +842,6 @@ void CACHE::collect_useful_stats(PACKET* packet){
       } else {
         useful_above++;
       }
+      useful_wp++;
     }
 }
