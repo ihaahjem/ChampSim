@@ -132,6 +132,22 @@ public:
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
 
+  struct compare_wp_rp {
+    std::deque<uint64_t> PTQ_wp;
+    std::deque<uint64_t> FTQ_when_ptq_wp;
+
+    uint64_t total_entries_to_compare = 0;
+    uint64_t total_equal_entries = 0;
+    uint64_t total_comparisons = 0;
+    uint64_t num_queues_same_order = 0;
+
+    void compare_wp_rp_entries();
+    void compare_wp_rp_entries_print_results();
+
+
+  };
+  compare_wp_rp compare_paths;
+
   // reorder buffer, load/store queue, register file
   champsim::circular_buffer<ooo_model_instr> IFETCH_BUFFER;
   champsim::delay_queue<ooo_model_instr> DISPATCH_BUFFER;

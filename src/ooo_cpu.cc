@@ -328,6 +328,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     compare_index++; // Only increment compare_index if it's within bounds and a new cache block is added to FTQ
   }
 
+  if(speculate && ptq_init){
+    if(compare_paths.FTQ_when_ptq_wp.empty() || compare_paths.FTQ_when_ptq_wp.back() != block_address){
+      compare_paths.FTQ_when_ptq_wp.push_back(block_address);
+    }
+  }
+
   // Handle fetch stall: set ptq_init
   if (fetch_stall && !ptq_init) {
     ptq_init = true;
@@ -358,6 +364,10 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
         PTQ.push_back({block_address, true});
       }else{
         PTQ.push_back({block_address, false});
+      }
+
+      if(speculate){
+        compare_paths.PTQ_wp.push_back(block_address);
       }
     }
 
@@ -422,7 +432,11 @@ void O3_CPU::clear_PTQ(){
   // Flush the ptq
   PTQ.clear();
   // Reset the necessary state variables.
-  ptq_init = false;
+   ptq_init = false;
+  compare_paths.PTQ_wp.clear();
+  compare_paths.FTQ_when_ptq_wp.clear();
+
+ 
   ptq_prefetch_entry = 0;
   instrs_to_speculate_this_cycle = 0;
   speculate = false;
