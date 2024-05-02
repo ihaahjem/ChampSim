@@ -99,8 +99,8 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
             
     
     // if(cache->NAME == "cpu0_L1I"){
-      cout << "  REQUESTED DURING SPECULATION: " << setw(10) << cache->requested_wp << "  ISSUED: " << setw(10) << cache->issued_wp << " NOT ACTUALLY ISSUED: " << setw(10) << cache->not_issued_wp << "  USEFUL: " << setw(10) << cache->num_prefetched_useful_wrong_path << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path << "  ACCURACY: " << setw(10) << (0.0+cache->num_prefetched_useful_wrong_path)/(cache->num_prefetched_useful_wrong_path + cache->num_prefetched_useless_wrong_path) << endl;
-      cout << "  ISSUED DURING SPECULATION BUT NOT FETCH_STALL: " << setw(10) << cache->issued_wp_not_fetch_stall << "  USEFUL: " << setw(10) << cache->useful_wp_not_fetch_stall << "  USELESS: " << setw(10) << cache->useless_wp_not_fetch_stall << "  ACCURACY: " << setw(10) << (0.0+cache->useful_wp_not_fetch_stall)/(cache->useful_wp_not_fetch_stall + cache->useless_wp_not_fetch_stall) << endl;
+      cout << "  ISSUED DURING SPECULATION: " << cache->issued_wp << "  USEFUL: " << cache->num_prefetched_useful_wrong_path << "  USELESS: " << cache->num_prefetched_useless_wrong_path << "  ACCURACY: " << (0.0+cache->num_prefetched_useful_wrong_path)/(cache->num_prefetched_useful_wrong_path + cache->num_prefetched_useless_wrong_path) << endl;
+      cout << "  ISSUED DURING SPECULATION BUT !FETCH_STALL: " << cache->issued_wp_not_fetch_stall << "  USEFUL: " << cache->useful_wp_not_fetch_stall << "  USELESS: " << cache->useless_wp_not_fetch_stall << "  ACCURACY: " << (0.0+cache->useful_wp_not_fetch_stall)/(cache->useful_wp_not_fetch_stall + cache->useless_wp_not_fetch_stall) << endl;
     //   cout << "  USEFUL DURING FETCH_STALL CONDITIONAL BM: " << setw(10) << cache->num_prefetched_useful_wrong_path_conditional << "  USELESS: " << setw(10) << cache->num_prefetched_useless_wrong_path_conditional << endl;
 
     //   // Misses counters during fetch stall

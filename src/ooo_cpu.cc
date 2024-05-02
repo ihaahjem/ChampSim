@@ -277,8 +277,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       }
       if (arch_instr.branch_taken == 1) {
         instrs_to_read_this_cycle = 0;
-        if(ptq_init){
-          clear_PTQ();
+        if(!ptq_init){
+          instrs_to_speculate_this_cycle = 0; // Slow down speculation also to kepp the queues close similar
         }
       }
 
@@ -323,8 +323,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   // Update compare_index based on ptq_init status and conditions.
   if (!ptq_init) {
     fill_prefetch_queue(arch_instr.ip);
-    compare_index = PTQ.size() - 1; // Always set to the last entry if ptq_init.
-  } else if (compare_index < PTQ.size() - 1 && FTQ.back() != block_address && PTQ.size() > 1) {
+    compare_index = (PTQ.size() > 0) ? (PTQ.size() - 1) : 0; // Always set to the last entry of ptq_init.
+  } else if ((compare_index < PTQ.size() - 1) && (FTQ.back() != block_address)) {
     compare_index++; // Only increment compare_index if it's within bounds and a new cache block is added to FTQ
   }
 
@@ -418,18 +418,18 @@ void O3_CPU::new_cache_block_fetch() {
 
 void O3_CPU::compare_queues(){
   // Remove the following after checked:
-  if(FTQ.size() == 1){
-    for (auto it = PTQ.begin(); it != PTQ.end(); ++it) {
-      // if the current index is needed:
-      if(it->block_address == FTQ.back()){
-        compare_index = std::distance(PTQ.begin(), it);
-        break;
-      }
-    }
-  }
+  // if(FTQ.size() == 1){
+  //   for (auto it = PTQ.begin(); it != PTQ.end(); ++it) {
+  //     // if the current index is needed:
+  //     if(it->block_address == FTQ.back()){
+  //       compare_index = std::distance(PTQ.begin(), it);
+  //       break;
+  //     }
+  //   }
+  // }
   // remove above
   //Compare back of FTQ to PTQ
-  if(FTQ.back() != PTQ[compare_index].block_address){
+  if(FTQ.back() != PTQ.at(compare_index).block_address){
     clear_PTQ();
   }
 }
@@ -547,13 +547,8 @@ void O3_CPU::fetch_instruction()
     num_entries_in_ftq = FTQ.size();
     
     if(!speculate){
-      // Flush the ptq
-      PTQ.clear();
-
-      // Reset the necessary variables.
-      ptq_init = false;
-      ptq_prefetch_entry = 0;
-      instrs_to_speculate_this_cycle = 0;
+      // Flush the ptq if no speculations were done to revert it to correct path
+      clear_PTQ();
     }else{
       num_speculated_fetch_stall = 0;
       collect_cb_added__stats();
