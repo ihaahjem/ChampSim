@@ -556,19 +556,21 @@ int main(int argc, char** argv)
         // cout << " Percentage addr num_24_29 " << (0.0 + ooo_cpu[i]->num_addr_80_1194_29) / tot_addr << endl;
         // cout << " Percentage addr num_above " << (0.0 + ooo_cpu[i]->num_addr_above) / tot_addr << endl;
 
-        // uint64_t tot_cycles = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
-        // if (tot_cycles) {
-        //     cout << " cycles 0 " << (0.0 + ooo_cpu[i]->cycles_0) / tot_cycles << endl;
-        //     cout << " cycles 1 " << (0.0 + ooo_cpu[i]->cycles_1) / tot_cycles << endl;
-        //     cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
-        //     cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
-        //     cout << " cycles 4 " << (0.0 + ooo_cpu[i]->cycles_4) / tot_cycles << endl;
-        //     cout << " cycles 6_11 " << (0.0 +  ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
-        //     cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
-        //     cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
-        //     cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
-        //     cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
-        // }
+        ooo_cpu[i]->cycles_0_5 = ooo_cpu[i]->cycles_0 + ooo_cpu[i]->cycles_1 + ooo_cpu[i]->cycles_2 + ooo_cpu[i]->cycles_3 + ooo_cpu[i]->cycles_4 + ooo_cpu[i]->cycles_5;
+        uint64_t tot_cycles = ooo_cpu[i]->cycles_0_5 + ooo_cpu[i]->cycles_6_11 + ooo_cpu[i]->cycles_12_17 + ooo_cpu[i]->cycles_18_23 + ooo_cpu[i]->cycles_24_29 + ooo_cpu[i]->cycles_above;
+        if (tot_cycles) {
+            // cout << " cycles 0 " << (0.0 + ooo_cpu[i]->cycles_0) / tot_cycles << endl;
+            // cout << " cycles 1 " << (0.0 + ooo_cpu[i]->cycles_1) / tot_cycles << endl;
+            // cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
+            // cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
+            cout << "CYCLES FROM FIRST INSTRUCTION NOT ASSUMED PREFETCHED DURING FETCH_STALL ADDED TO FTQ UNTIL FETCHED"<< endl;
+            cout << " cycles 0_5 " << (0.0 + ooo_cpu[i]->cycles_0_5) / tot_cycles << endl;
+            cout << " cycles 6_11 " << (0.0 +  ooo_cpu[i]->cycles_6_11) / tot_cycles << endl;
+            cout << " cycles 12_17 " << (0.0 + ooo_cpu[i]->cycles_12_17) / tot_cycles << endl;
+            cout << " cycles 18_23 " << (0.0 + ooo_cpu[i]->cycles_18_23) / tot_cycles << endl;
+            cout << " cycles 24_29 " << (0.0 + ooo_cpu[i]->cycles_24_29) / tot_cycles << endl;
+            cout << " above 29 " << (0.0 + ooo_cpu[i]->cycles_above) / tot_cycles << endl;
+        }
 
 
 

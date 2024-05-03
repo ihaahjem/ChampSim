@@ -1479,6 +1479,8 @@ void O3_CPU::count_cycles_until_fetch(){
         cycles_3++;
     } else if (cycles_fetch_first_cb_after_prf == 4) {
         cycles_4++;
+    }  else if (cycles_fetch_first_cb_after_prf == 5) {
+        cycles_5++;
     } else if (cycles_fetch_first_cb_after_prf < 12) {
         cycles_6_11++;
     } else if (cycles_fetch_first_cb_after_prf < 18) {

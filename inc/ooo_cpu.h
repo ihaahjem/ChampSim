@@ -119,6 +119,7 @@ public:
   uint64_t cycles_2 = 0;
   uint64_t cycles_3 = 0;
   uint64_t cycles_4 = 0;
+  uint64_t cycles_5 = 0;
   uint64_t cycles_6_11 = 0;
   uint64_t cycles_12_17 = 0;
   uint64_t cycles_18_23 = 0;
