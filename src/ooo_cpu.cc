@@ -350,7 +350,19 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     compare_queues();
   }
   
+  // Fill always correct prefetch queue
+  fill_prefetch_queue_correct_path(arch_instr.ip);
+
   instr_unique_id++;
+}
+
+void O3_CPU::fill_prefetch_queue_correct_path(uint64_t ip){
+    // Get block address
+    uint64_t block_address = ((ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+    //Check that the block address is not the same as the last block address added to PTQ
+    if((!PTQ_only_correct.empty() && PTQ_only_correct.back() != block_address) || PTQ_only_correct.empty()){
+      PTQ_only_correct.push_back(block_address);
+    }
 }
 
 void O3_CPU::fill_prefetch_queue(uint64_t ip){
@@ -384,6 +396,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
     }
 }
 
+
 void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
@@ -413,6 +426,14 @@ void O3_CPU::new_cache_block_fetch() {
     // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
     ptq_prefetch_entry = (ptq_prefetch_entry > 0 && ptq_prefetch_entry <= PTQ.size()) ? ptq_prefetch_entry - 1 : 0;
     compare_index = (compare_index > 0 && compare_index <= PTQ.size()) ? compare_index - 1 : 0;
+  }
+
+  // Only correct path ptq
+  if (!PTQ_only_correct.empty() && !FTQ.empty() && FTQ.front() != current_block_address_ftq) {
+    PTQ_only_correct.pop_front(); // Remove the front element of the queue.
+
+    // Adjust compare_index and ptq_prefetch_entry based on the current size of PTQ, ensuring they are never out of bounds.
+    ptq_prefetch_entry_cp = (ptq_prefetch_entry_cp > 0 && ptq_prefetch_entry_cp <= PTQ_only_correct.size()) ? ptq_prefetch_entry_cp - 1 : 0;
   }
 }
 

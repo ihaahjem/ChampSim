@@ -30,10 +30,11 @@ void O3_CPU::prefetcher_cycle_operate() {
   if (PTQ.empty()){
     return;
   } 
-
+  uint64_t b_address = 0;
   if ((l1i->get_occupancy(0, 0) < l1i->get_size(0,0) >> 1) && ptq_prefetch_entry < PTQ.size()) { 
       bool prefetched = false;
       auto& [block_address, added_during_speculation, fetch_stall] = PTQ.at(ptq_prefetch_entry);
+      b_address = block_address;
       // Check if it is recently prefetched
       std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
       if(it == recently_prefetched.end()){
@@ -65,11 +66,53 @@ void O3_CPU::prefetcher_cycle_operate() {
         ptq_prefetch_entry++;
       }
     }
+
+    // Prefetch only correct path
+    // prefetcher_only_correct_path(b_address);
 }
 
 void O3_CPU::prefetcher_final_stats() {}
 
 
+
+// PTQ correct path
+void O3_CPU::prefetcher_only_correct_path(uint64_t PTQ_block_address) {
+  // Perform prefetching of what is in the PTQ
+  if (PTQ_only_correct.empty() || (ptq_prefetch_entry_cp < PTQ_only_correct.size() && PTQ_block_address == PTQ_only_correct.at(ptq_prefetch_entry_cp))){
+    return;
+  } 
+
+  if ((l1i->get_occupancy(0, 0) < l1i->get_size(0,0) >> 1) && ptq_prefetch_entry_cp < PTQ_only_correct.size()) { 
+      bool prefetched = false;
+      uint64_t block_address = PTQ_only_correct.at(ptq_prefetch_entry_cp);
+      // Check if it is recently prefetched
+      std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+      if(it == recently_prefetched.end()){
+        // Check if cache block already in L1I
+        if(l1i->hit_test(block_address)){
+          // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry_cp
+          prefetched = true;
+
+        }else{
+          // Prefetch
+          prefetched = l1i->prefetch_line(block_address,true, 0, false, false, 0, false); //Three last inputs only added to collect stats
+
+          // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
+          if(prefetched){
+            recently_prefetched.push_back(block_address);
+            if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+              recently_prefetched.pop_front();
+            }
+          }
+        }
+      }
+      // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
+      // move the counter pointing to the entry to be prefetched
+      if(prefetched || it != recently_prefetched.end()){
+        ptq_prefetch_entry_cp++;
+      }
+    }
+}
 
 // STAT functions
 void O3_CPU::collect_prefetch_stats(bool added_during_speculation) {

@@ -52,6 +52,8 @@ public:
   #define MAX_RECENTLY_PREFETCHED_ENTRIES 15 //TODO: Find ideal length
   uint64_t instrs_to_speculate_this_cycle = 0;
   uint64_t ptq_prefetch_entry = 0;
+  uint64_t ptq_prefetch_entry_cp = 0;
+
   uint64_t compare_index = 0;
   uint64_t current_block_address_ftq = 0;
   bool ptq_init = false;
@@ -138,6 +140,8 @@ public:
   };
   PTQ_entry ptq_entry;
 
+
+  std::deque<uint64_t> PTQ_only_correct;
   std::deque<PTQ_entry> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
@@ -199,6 +203,9 @@ public:
 
   // functions
   void init_instruction(ooo_model_instr instr);
+  // PTQ_only_correct
+  void fill_prefetch_queue_correct_path(uint64_t ip);
+  void prefetcher_only_correct_path(uint64_t PTQ_block_address);
   // PTQ
   void fill_prefetch_queue(uint64_t ip);
   void fill_ptq_speculatively();
