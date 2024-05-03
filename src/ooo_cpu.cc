@@ -315,9 +315,9 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
     if(cycleCounter.cb_until_time_start == 0 || fetch_stall == 1){
       assumed_prefetched = false;
-      cycleCounter.cb_until_time_start = 0;
-      cycleCounter.start_counting_cycles = false;
-      cycleCounter.index_start_count = FTQ.size();
+      // cycleCounter.cb_until_time_start = 0;
+      // cycleCounter.start_counting_cycles = false;
+      // cycleCounter.index_start_count = FTQ.size();
       // Compare the queues
       if(!compare_queues.PTQ_during_fetch_stall.empty() && !compare_queues.FTQ_after_fetch_stall.empty()){
         compare_queues.compare_wp_rp_entries();
@@ -555,6 +555,10 @@ void O3_CPU::promote_to_decode()
 
     IFETCH_BUFFER.pop_front();
     FTQ.pop_front();
+    
+    if(cycleCounter.index_start_count){
+      cycleCounter.index_start_count--;
+    }
 
     // Count the cycles until the first instr not assumed
     cycleCounter.count_cycles_until_fetched();
@@ -562,6 +566,8 @@ void O3_CPU::promote_to_decode()
     //Check if it is a new cache block at the head and the PTQ should also be popped
     new_cache_block_fetch();
     current_block_address_ftq = FTQ.front();
+
+    
 
     num_entries_in_ftq--;
 
@@ -1430,49 +1436,53 @@ void O3_CPU::print_deadlock()
 //         cout << " Percentage addr num_above " << (0.0 + num_addr_above) / tot_addr << endl;
 // }
 
-// void O3_CPU::CycleCounter::count_cycles_until_fetched(){
-//   if(!index_start_count && start_counting_cycles){
-//     start_counting_cycles = false;
-//     if (cycles_fetch_first_cb_after_prf == 0) {
-//         cycles_0++;
-//     } else if (cycles_fetch_first_cb_after_prf == 1) {
-//         cycles_1++;
-//     } else if (cycles_fetch_first_cb_after_prf == 2) {
-//         cycles_2++;
-//     } else if (cycles_fetch_first_cb_after_prf == 3) {
-//         cycles_3++;
-//     } else if (cycles_fetch_first_cb_after_prf == 4) {
-//         cycles_4++;
-//     } else if (cycles_fetch_first_cb_after_prf < 12) {
-//         cycles_6_11++;
-//     } else if (cycles_fetch_first_cb_after_prf < 18) {
-//         cycles_12_17++;
-//     } else if (cycles_fetch_first_cb_after_prf < 24) {
-//         cycles_18_23++;
-//     } else if (cycles_fetch_first_cb_after_prf < 30) {
-//         cycles_24_29++;
-//     } else {
-//         cycles_above++;
-//     }
-//     cycles_fetch_first_cb_after_prf=0;
-//   }
-// }
+void O3_CPU::CycleCounter::count_cycles_until_fetched(){
+  if(!index_start_count && start_counting_cycles){
+    start_counting_cycles = false;
+    if (cycles_fetch_first_cb_after_prf == 0) {
+        cycles_0++;
+    } else if (cycles_fetch_first_cb_after_prf == 1) {
+        cycles_1++;
+    } else if (cycles_fetch_first_cb_after_prf == 2) {
+        cycles_2++;
+    } else if (cycles_fetch_first_cb_after_prf == 3) {
+        cycles_3++;
+    } else if (cycles_fetch_first_cb_after_prf == 4) {
+        cycles_4++;
+    } else if (cycles_fetch_first_cb_after_prf == 5) {
+        cycles_5++;
+    } else if (cycles_fetch_first_cb_after_prf < 12) {
+        cycles_6_11++;
+    } else if (cycles_fetch_first_cb_after_prf < 18) {
+        cycles_12_17++;
+    } else if (cycles_fetch_first_cb_after_prf < 24) {
+        cycles_18_23++;
+    } else if (cycles_fetch_first_cb_after_prf < 30) {
+        cycles_24_29++;
+    } else {
+        cycles_above++;
+    }
+    cycles_fetch_first_cb_after_prf=0;
+  }
+}
 
-//  void O3_CPU::CycleCounter::printStatistics_cycles_until_fetched() {
-//     uint64_t tot_cycles = cycles_0 + cycles_1 + cycles_2 + cycles_3 + cycles_4 + cycles_6_11 + cycles_12_17 + cycles_18_23 + cycles_24_29 + cycles_above;
-//     if (tot_cycles) {
-//         cout << " cycles 0 " << (0.0 + cycles_0) / tot_cycles << endl;
-//         cout << " cycles 1 " << (0.0 + cycles_1) / tot_cycles << endl;
-//         cout << " cycles 2 " << (0.0 + cycles_2) / tot_cycles << endl;
-//         cout << " cycles 3 " << (0.0 + cycles_3) / tot_cycles << endl;
-//         cout << " cycles 4 " << (0.0 + cycles_4) / tot_cycles << endl;
-//         cout << " cycles 6_11 " << (0.0 +  cycles_6_11) / tot_cycles << endl;
-//         cout << " cycles 12_17 " << (0.0 + cycles_12_17) / tot_cycles << endl;
-//         cout << " cycles 18_23 " << (0.0 + cycles_18_23) / tot_cycles << endl;
-//         cout << " cycles 24_29 " << (0.0 + cycles_24_29) / tot_cycles << endl;
-//         cout << " above 29 " << (0.0 + cycles_above) / tot_cycles << endl;
-//     }
-// }
+ void O3_CPU::CycleCounter::printStatistics_cycles_until_fetched() {
+  cycles_0_5 = cycles_0 + cycles_1 + cycles_2 + cycles_3 + cycles_4 + cycles_5;
+  uint64_t tot_cycles = cycles_0_5 + cycles_6_11 + cycles_12_17 + cycles_18_23 + cycles_24_29 + cycles_above;
+  if (tot_cycles) {
+      // cout << " cycles 0 " << (0.0 + ooo_cpu[i]->cycles_0) / tot_cycles << endl;
+      // cout << " cycles 1 " << (0.0 + ooo_cpu[i]->cycles_1) / tot_cycles << endl;
+      // cout << " cycles 2 " << (0.0 + ooo_cpu[i]->cycles_2) / tot_cycles << endl;
+      // cout << " cycles 3 " << (0.0 + ooo_cpu[i]->cycles_3) / tot_cycles << endl;
+      cout << "CYCLES FROM FIRST INSTRUCTION NOT ASSUMED PREFETCHED DURING FETCH_STALL ADDED TO FTQ UNTIL FETCHED"<< endl;
+      cout << " cycles 0_5 " <<   (0.0 + cycles_0_5) / tot_cycles << endl;
+      cout << " cycles 6_11 " <<  (0.0 + cycles_6_11) / tot_cycles << endl;
+      cout << " cycles 12_17 " << (0.0 + cycles_12_17) / tot_cycles << endl;
+      cout << " cycles 18_23 " << (0.0 + cycles_18_23) / tot_cycles << endl;
+      cout << " cycles 24_29 " << (0.0 + cycles_24_29) / tot_cycles << endl;
+      cout << " above 29 " <<     (0.0 + cycles_above) / tot_cycles << endl;
+  }
+}
 
 // void O3_CPU::compare_wp_rp::compare_wp_rp_entries(){
 //   total_comparisons += FTQ_after_fetch_stall.size(); // How many are equal. Does not consider order
