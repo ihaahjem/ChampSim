@@ -25,50 +25,97 @@ uint32_t O3_CPU::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way
   return metadata_in;
 }
 
+// void O3_CPU::prefetcher_cycle_operate() {
+//   // Perform prefetching of what is in the PTQ
+//   if (PTQ.empty()){
+//     return;
+//   } 
+
+//   if ((l1i->get_occupancy(0, 0) < l1i->get_size(0, 0) >> 1) && ptq_prefetch_entry < PTQ.size()) { // There are entries in the PTQ that are not prefetched
+//     bool prefetched = false;
+//     auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
+//     // Check if it is recently prefetched
+//     std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+//     if(it == recently_prefetched.end()){
+//       if(l1i->hit_test(block_address)){
+//         // TODO: Figure out why this never happens. I would expect it to be found in L1I very often.
+
+//         // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
+//         prefetched = true;
+//         times_found_in_l1i++;
+//       }else{
+//         // Prefetch
+//         prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, prf_wp.fetch_stall_prf_number, assumed_prefetched); //Three last inputs only added to collect stats
+      
+//         // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
+//         if(prefetched){
+//           recently_prefetched.push_back(block_address);
+//           if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+//             recently_prefetched.pop_front();
+//           }
+//           // STATS
+//           prf_wp.collect_prefetch_stats(added_during_fetch_stall, conditional_bm);
+//           if(assumed_prefetched){
+//             prefetches_assumed_prefetched++;
+//           }
+//         }
+//         times_not_found_in_l1i++;
+//       }
+//     }
+//     // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
+//     // increment ptq_prefetch_entry
+//     if(prefetched || it != recently_prefetched.end()){
+//         ptq_prefetch_entry++;
+//     }
+//   }
+// }
+
+
 void O3_CPU::prefetcher_cycle_operate() {
   // Perform prefetching of what is in the PTQ
   if (PTQ.empty()){
     return;
   } 
 
-  if ((l1i->get_occupancy(0, 0) < l1i->get_size(0, 0) >> 1) && ptq_prefetch_entry < PTQ.size()) { // There are entries in the PTQ that are not prefetched
-    bool prefetched = false;
-    auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
-    // Check if it is recently prefetched
-    std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
-    if(it == recently_prefetched.end()){
-      if(l1i->hit_test(block_address)){
-        // TODO: Figure out why this never happens. I would expect it to be found in L1I very often.
+  if ((l1i->get_occupancy(0, 0) < l1i->get_size(0,0) >> 1) && ptq_prefetch_entry < PTQ.size()) { 
 
-        // If found in L1I, mark prefetched as true so that we go to the next ptq_prefetch_entry
-        prefetched = true;
-        times_found_in_l1i++;
-      }else{
-        // Prefetch
-        prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, prf_wp.fetch_stall_prf_number, assumed_prefetched); //Three last inputs only added to collect stats
-      
-        // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
-        if(prefetched){
-          recently_prefetched.push_back(block_address);
-          if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
-            recently_prefetched.pop_front();
-          }
-          // STATS
-          prf_wp.collect_prefetch_stats(added_during_fetch_stall, conditional_bm);
-          if(assumed_prefetched){
-            prefetches_assumed_prefetched++;
+    bool should_prefetch = false;
+    bool prefetched = false;
+    while(!should_prefetch && ptq_prefetch_entry < PTQ.size()){
+      auto& [block_address, added_during_fetch_stall, assumed_prefetched] = PTQ.at(ptq_prefetch_entry);
+      std::deque<uint64_t>::iterator it = std::find(recently_prefetched.begin(), recently_prefetched.end(), block_address);
+      if(it == recently_prefetched.end()){
+        if(l1i->hit_test(block_address)){
+          // Try prefetching the next instead since this one is already available
+          ptq_prefetch_entry++;
+        }else{
+          // Not found in recently prefetched or l1i so should prefetch
+          should_prefetch = true;
+          // Prefetch
+          prefetched = l1i->prefetch_line(block_address,true, 0, added_during_fetch_stall, conditional_bm, prf_wp.fetch_stall_prf_number, assumed_prefetched); //Three last inputs only added to collect stats
+          // If the prefetch was issued successfully (VAPQ not full), add to recently prefetched queue
+          if(prefetched){
+            recently_prefetched.push_back(block_address);
+            if(recently_prefetched.size() >= MAX_RECENTLY_PREFETCHED_ENTRIES){
+              recently_prefetched.pop_front();
+            }
+            // STATS
+            prf_wp.collect_prefetch_stats(added_during_fetch_stall, conditional_bm);
+            if(assumed_prefetched){
+              prefetches_assumed_prefetched++;
+            }
+
+            ptq_prefetch_entry++;
           }
         }
-        times_not_found_in_l1i++;
-      }
-    }
-    // If prefetched was successful (Either found in recently prefetched, or successful prefetch),
-    // increment ptq_prefetch_entry
-    if(prefetched || it != recently_prefetched.end()){
+      }else{
         ptq_prefetch_entry++;
+      }
     }
   }
 }
+
+
 
 void O3_CPU::prefetcher_final_stats() {}
 
