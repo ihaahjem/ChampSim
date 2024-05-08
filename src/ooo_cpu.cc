@@ -363,6 +363,10 @@ void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
 
+    uint8_t branch_prediction = impl_predict_branch(current_btb_prediction.first, next_btb_prediction.first, next_btb_prediction.second, current_btb_prediction.second);
+    if ((branch_prediction == 0) && (next_btb_prediction.second == 0)) {
+      next_btb_prediction.first == 0;
+    }
     // If it was not found in the BTB, select the next sequential instruction
     if(next_btb_prediction.first == 0){
       next_btb_prediction.first = current_btb_prediction.first + 4;
