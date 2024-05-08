@@ -252,6 +252,9 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
 
         // STATS
+        if(ptq_init){
+          num_flush_before_ptq_flush++;
+        }
         num_fetch_stall++;
         num_ftq_flush++;
         conditional_bm = false;

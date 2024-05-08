@@ -518,6 +518,7 @@ int main(int argc, char** argv)
 
         cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
+        cout << " Number of FTQ flushes before PTQ " << ooo_cpu[i]->num_flush_before_ptq_flush << endl;
         cout << " Blocks speculated after fetch_stall " << ooo_cpu[i]->blocks_speculated_after_fetch_stall << endl;
         // cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         // cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;

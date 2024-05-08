@@ -128,6 +128,7 @@ public:
   uint64_t percentage_tot = 0;
 
   uint64_t num_fetch_stall = 0;
+  uint64_t num_flush_before_ptq_flush = 0;
   uint64_t blocks_speculated_after_fetch_stall = 0;
   bool spec_after_fetch_stall = false;
   uint64_t prefetched_spec_after_fetch_stall = 0;
