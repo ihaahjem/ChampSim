@@ -27,10 +27,10 @@ clean:
 	 find prefetcher/fdip -name \*.d -delete
 	 find branch/hashed_perceptron -name \*.o -delete
 	 find branch/hashed_perceptron -name \*.d -delete
-	 find btb/basic_btb -name \*.o -delete
-	 find btb/basic_btb -name \*.d -delete
+	 find btb/two_btb -name \*.o -delete
+	 find btb/two_btb -name \*.d -delete
 
-bin/champsim: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno.a obj/pref_pprefetcherDfdip.a obj/bpred_bbranchDhashed_perceptron.a obj/btb_bbtbDbasic_btb.a
+bin/champsim: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno.a obj/pref_pprefetcherDfdip.a obj/bpred_bbranchDhashed_perceptron.a obj/btb_bbtbDtwo_btb.a
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 replacement/lru/%.o: CFLAGS += -Ireplacement/lru
@@ -61,10 +61,10 @@ obj/bpred_bbranchDhashed_perceptron.a: $(patsubst %.cc,%.o,$(wildcard branch/has
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
-btb/basic_btb/%.o: CFLAGS += -Ibtb/basic_btb
-btb/basic_btb/%.o: CXXFLAGS += -Ibtb/basic_btb
-btb/basic_btb/%.o: CXXFLAGS +=  -Dinitialize_btb=btb_bbtbDbasic_btb_initialize -Dupdate_btb=btb_bbtbDbasic_btb_update -Dbtb_prediction=btb_bbtbDbasic_btb_predict
-obj/btb_bbtbDbasic_btb.a: $(patsubst %.cc,%.o,$(wildcard btb/basic_btb/*.cc)) $(patsubst %.c,%.o,$(wildcard btb/basic_btb/*.c))
+btb/two_btb/%.o: CFLAGS += -Ibtb/two_btb
+btb/two_btb/%.o: CXXFLAGS += -Ibtb/two_btb
+btb/two_btb/%.o: CXXFLAGS +=  -Dinitialize_btb=btb_bbtbDtwo_btb_initialize -Dupdate_btb=btb_bbtbDtwo_btb_update -Dbtb_prediction=btb_bbtbDtwo_btb_predict
+obj/btb_bbtbDtwo_btb.a: $(patsubst %.cc,%.o,$(wildcard btb/two_btb/*.cc)) $(patsubst %.c,%.o,$(wildcard btb/two_btb/*.c))
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
@@ -73,5 +73,5 @@ obj/btb_bbtbDbasic_btb.a: $(patsubst %.cc,%.o,$(wildcard btb/basic_btb/*.cc)) $(
 -include $(wildcard prefetcher/no/*.d)
 -include $(wildcard prefetcher/fdip/*.d)
 -include $(wildcard branch/hashed_perceptron/*.d)
--include $(wildcard btb/basic_btb/*.d)
+-include $(wildcard btb/two_btb/*.d)
 

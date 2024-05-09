@@ -220,7 +220,13 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
     num_branch++;
   
-    std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(arch_instr.ip, arch_instr.branch_type);
+    std::pair<uint64_t, uint8_t> btb_result = make_pair(0,0);
+    if(arch_instr.branch_type == BRANCH_CONDITIONAL){
+      btb_result = btb_prediction_cond(arch_instr.ip, arch_instr.branch_type);
+    }else{
+      btb_result = impl_btb_prediction(arch_instr.ip, arch_instr.branch_type);
+    }
+    
     uint64_t predicted_branch_target = btb_result.first;
     uint8_t always_taken = btb_result.second;
     uint8_t branch_prediction = impl_predict_branch(arch_instr.ip, predicted_branch_target, always_taken, arch_instr.branch_type);
@@ -240,7 +246,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
         if(arch_instr.branch_taken == 1){ // Can not do speculations
           speculate = false;
           instrs_to_speculate_this_cycle = 0;
-        }else{
+        }else {
           speculate = true;
           uint64_t next_target = (predicted_branch_target == 0) ? arch_instr.ip + 4 : predicted_branch_target;
           current_btb_prediction = std::make_pair(next_target, always_taken);
@@ -277,7 +283,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       speculate = false;
     }
 
-    impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
+    if(arch_instr.branch_type == BRANCH_CONDITIONAL){
+      update_btb_cond(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
+    }else{
+      impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
+    }
+    // impl_update_btb(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
     impl_last_branch_result(arch_instr.ip, arch_instr.branch_target, arch_instr.branch_taken, arch_instr.branch_type);
   }
 
@@ -300,6 +311,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   if(cycleCounter.cb_until_time_start){
     assumed_prefetched = true;
+    if(arch_instr.is_branch){
+      num_correct_path_branch++;
+    }else{
+      num_sequential_correct_path++;
+    }
     if((FTQ.empty() || ((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE) != FTQ.back())){
       cycleCounter.cb_until_time_start--;
       compare_queues.FTQ_after_fetch_stall.push_back(((arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE));
@@ -361,16 +377,28 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
 
 void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
-    std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
+    std::pair<uint64_t, uint8_t> next_btb_prediction = btb_prediction_cond(current_btb_prediction.first, current_btb_prediction.second);
+    speculations++;
+    if(next_btb_prediction.first == 0){
+      std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
+      if(next_btb_prediction.first == 0){
+        times_next_was_zero++;
+      }
+    }
 
     uint8_t branch_prediction = impl_predict_branch(current_btb_prediction.first, next_btb_prediction.first, next_btb_prediction.second, current_btb_prediction.second);
-    if ((branch_prediction == 0) && (next_btb_prediction.second == 0)) {
-      next_btb_prediction.first == 0;
-    }
-    // If it was not found in the BTB, select the next sequential instruction
-    if(next_btb_prediction.first == 0){
+
+    if (((branch_prediction == 0) && (next_btb_prediction.second == 0)) || (next_btb_prediction.first == 0)) {
       next_btb_prediction.first = current_btb_prediction.first + 4;
     }
+
+    if(branch_prediction == 1){
+      instrs_to_speculate_this_cycle = 0;
+    }
+    // If it was not found in the BTB, select the next sequential instruction
+    // if(next_btb_prediction.first == 0){
+    //   next_btb_prediction.first = current_btb_prediction.first + 4;
+    // }
 
     // Fill PTQ with the prediction
     fill_prefetch_queue(current_btb_prediction.first);
@@ -1520,3 +1548,6 @@ void O3_CPU::CycleCounter::count_cycles_until_fetched(){
 //   cout << " Total equal entries " << total_equal_entries << endl;
 //   cout << " Number of queues with same order " << num_queues_same_order << endl;
 // }
+
+
+

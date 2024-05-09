@@ -191,6 +191,23 @@ public:
   std::deque<ptq_entry> PTQ;
   std::deque<uint64_t> FTQ;
   std::deque<uint64_t> recently_prefetched;
+
+
+  uint64_t  speculations = 0;
+  uint64_t  times_next_was_zero = 0;
+  uint64_t  num_correct_path_branch = 0;
+  uint64_t  num_sequential_correct_path = 0;
+
+
+  // void initialize_btb(); 
+  // std::pair<uint64_t, uint8_t> btb_prediction(uint64_t ip, uint8_t branch_type);
+  // void update_btb(uint64_t ip, uint64_t branch_target, uint8_t taken, uint8_t branch_type);
+
+  void initialize_btb_cond();
+  void update_btb_cond(uint64_t ip, uint64_t branch_target, uint8_t taken, uint8_t branch_type);
+  std::pair<uint64_t, uint8_t> btb_prediction_cond(uint64_t ip, uint8_t branch_type);
+
+
   // Added by me -- end --
 
   // reorder buffer, load/store queue, register file

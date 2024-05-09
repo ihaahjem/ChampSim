@@ -55,6 +55,7 @@
     "random": "cpp",
     "type_traits": "cpp",
     "utility": "cpp",
-    "*.inc": "cpp"
+    "*.inc": "cpp",
+    "locale": "cpp"
   }
 }

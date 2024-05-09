@@ -29,7 +29,7 @@
             "schedule_latency": 0,
             "execute_latency": 0,
             "branch_predictor": "hashed_perceptron",
-            "btb": "basic_btb"
+            "btb": "two_btb"
         }
     ],
 
