@@ -59,6 +59,7 @@ public:
   uint64_t num_entries_in_ftq = 0;
   bool assumed_prefetched = false;
   uint64_t num_speculated = 0;
+  uint64_t num_branch_found_btb = 0;
 
   // Functions
   void fill_prefetch_queue(uint64_t ip);

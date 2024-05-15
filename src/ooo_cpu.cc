@@ -210,7 +210,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
 
-
+  bool found_in_btb = false;
   // handle branch prediction
   if (arch_instr.is_branch) {
 
@@ -227,6 +227,11 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
       btb_result = impl_btb_prediction(arch_instr.ip, arch_instr.branch_type);
     }
     
+    if(btb_result.first > 0){
+      num_branch_found_btb++;
+      found_in_btb = true;
+    }
+
     uint64_t predicted_branch_target = btb_result.first;
     uint8_t always_taken = btb_result.second;
     uint8_t branch_prediction = impl_predict_branch(arch_instr.ip, predicted_branch_target, always_taken, arch_instr.branch_type);
@@ -311,7 +316,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 
   if(cycleCounter.cb_until_time_start){
     assumed_prefetched = true;
-    if(arch_instr.is_branch){
+
+    if(found_in_btb){
       num_correct_path_branch++;
     }else{
       num_sequential_correct_path++;
