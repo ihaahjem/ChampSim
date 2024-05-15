@@ -132,6 +132,11 @@ public:
   uint64_t blocks_speculated_after_fetch_stall = 0;
   bool spec_after_fetch_stall = false;
   uint64_t prefetched_spec_after_fetch_stall = 0;
+  uint64_t entry_speculated_post_bm_not_fetch_stall = 0;
+  uint64_t ptq_entries_0 = 0;
+  uint64_t ptq_entries_1 = 0;
+  uint64_t ptq_entries_2 = 0;
+  uint64_t ptq_entries_above = 0;
 
   struct PTQ_entry{
     uint64_t block_address = 0;

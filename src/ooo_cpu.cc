@@ -380,6 +380,10 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       if(speculate && spec_after_fetch_stall){
         blocks_speculated_after_fetch_stall++;
       }
+
+      if(ptq_init && instrs_to_speculate_this_cycle && speculate && fetch_stall == 0){
+        entry_speculated_post_bm_not_fetch_stall++;
+      }
     }
 
     if(fetch_stall == 1 && ptq_init){
@@ -453,6 +457,19 @@ void O3_CPU::clear_PTQ(){
   compare_paths.compare_wp_rp_entries();
   compare_paths.PTQ_wp.clear();
   compare_paths.FTQ_when_ptq_wp.clear();
+
+  if(speculate){
+    if(entry_speculated_post_bm_not_fetch_stall < 1){
+      ptq_entries_0++;
+    }else if(entry_speculated_post_bm_not_fetch_stall < 2){
+      ptq_entries_1++;
+    }else if(entry_speculated_post_bm_not_fetch_stall < 3){
+      ptq_entries_2++;
+    }else{
+      ptq_entries_above++;
+    }
+    entry_speculated_post_bm_not_fetch_stall = 0;
+  }
 
  
   ptq_prefetch_entry = 0;

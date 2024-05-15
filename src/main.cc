@@ -526,6 +526,7 @@ int main(int argc, char** argv)
         // cout << " AVG number of entries in FTQ when flush " << ooo_cpu[i]->num_entries_in_ftq_when_flush/ooo_cpu[i]->num_ftq_flush << endl;
         cout << " Number of block_addresses prefetched during speculation " << ooo_cpu[i]->num_prefetched_wrong_path << endl;
         cout << " Number of block_addresses prefetched during speculation after fetch_stall " << ooo_cpu[i]->prefetched_spec_after_fetch_stall << endl;
+        cout << " ptq_entries 0 " << ooo_cpu[i]->ptq_entries_0 << " ptq_entries 1 " << ooo_cpu[i]->ptq_entries_1 << " ptq_entries 2 " << ooo_cpu[i]->ptq_entries_2 << " ptq_entries above " << ooo_cpu[i]->ptq_entries_above << endl;
 
         ooo_cpu[i]->compare_paths.compare_wp_rp_entries_print_results();
         
