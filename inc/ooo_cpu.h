@@ -59,6 +59,7 @@ public:
   bool speculate = false;
   uint64_t num_entries_in_ftq = 0;
   uint64_t num_speculated_fetch_stall = 0;
+  uint64_t prev_ptq_compare_block = 0;
 
 
   // STATS

@@ -337,10 +337,6 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
     }
   }
 
-  // Handle fetch stall: set ptq_init
-  if (fetch_stall && !ptq_init) {
-    ptq_init = true;
-  }
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
@@ -348,10 +344,16 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   FTQ.push_back(block_address);
   num_entries_in_ftq++;
 
-  // Perform queue comparison if conditions are met.
+  // Perform queue comparison if conditions are met. 
   if (!FTQ.empty() && !PTQ.empty() && ptq_init) {
     compare_queues();
   }
+
+  // Handle fetch stall: set ptq_init
+  if (fetch_stall && !ptq_init) {
+    ptq_init = true;
+  }
+
   
   instr_unique_id++;
 }
@@ -381,7 +383,7 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
         blocks_speculated_after_fetch_stall++;
       }
 
-      if(ptq_init && instrs_to_speculate_this_cycle && speculate && fetch_stall == 0){
+      if(ptq_init && speculate && fetch_stall == 0){
         entry_speculated_post_bm_not_fetch_stall++;
       }
     }
@@ -440,6 +442,7 @@ void O3_CPU::compare_queues(){
   //   }
   // }
   // remove above
+
   //Compare back of FTQ to PTQ
   if(FTQ.back() != PTQ.at(compare_index).block_address){
     clear_PTQ();
