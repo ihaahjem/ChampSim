@@ -534,17 +534,29 @@ int main(int argc, char** argv)
         // cout << " Number cycles spent in fetch_stall " << ooo_cpu[i]->num_cycles_fetch_stall << endl;
         // cout << " AVG number of cache blocks added to PTQ during fetch stall " << ooo_cpu[i]->num_cb_to_PTQ_fetch_stall/ooo_cpu[i]->num_ftq_flush << endl;
         
-        // uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_128;
-        // cout << " Percentage cb num_0 " << (0.0 + ooo_cpu[i]->num_cb_0) / tot_cb << endl;
-        // cout << " Percentage cb num_1 " << (0.0 + ooo_cpu[i]->num_cb_1) / tot_cb << endl;
-        // cout << " Percentage cb num_2 " << (0.0 + ooo_cpu[i]->num_cb_2) / tot_cb << endl;
-        // cout << " Percentage cb num_3 " << (0.0 + ooo_cpu[i]->num_cb_3) / tot_cb << endl;
-        // cout << " Percentage cb num_4 " << (0.0 + ooo_cpu[i]->num_cb_4) / tot_cb << endl;
-        // cout << " Percentage cb num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10) / tot_cb << endl;
-        // cout << " Percentage cb num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15) / tot_cb << endl;
-        // cout << " Percentage cb num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20) / tot_cb << endl;
-        // cout << " Percentage cb num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25) / tot_cb << endl;
-        // cout << " Percentage cb num_26_128 " << (0.0 + ooo_cpu[i]->num_cb_26_128) / tot_cb << endl;
+        // TOTAL number of cache blocks added to PTQ during speculation on wrong path
+        // uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_above;
+        cout << " Number of CB added to PTQ during spec: num_1_5 " << (0.0 + ooo_cpu[i]->num_cb_1_5) << endl;
+        cout << " Number of CB added to PTQ during spec: num_6_10 " << (0.0 + ooo_cpu[i]->num_cb_6_10)  << endl;
+        cout << " Number of CB added to PTQ during spec: num_11_15 " << (0.0 + ooo_cpu[i]->num_cb_11_15)  << endl;
+        cout << " Number of CB added to PTQ during spec: num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20)  << endl;
+        cout << " Number of CB added to PTQ during spec: num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25)  << endl;
+        cout << " Number of CB added to PTQ during spec: num_26_above " << (0.0 + ooo_cpu[i]->num_cb_26_above) << endl;
+        cout << " Number of CB added to PTQ during spec: total " << (0.0 + ooo_cpu[i]->num_cb_total) << endl;
+
+        // Number of cache blocks added to PTQ during speculation on worng path where fetch_stall = 0
+        // uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_above;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_1_5 "       << ooo_cpu[i]->num_cb_nfetch_stall_1_5      << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_6_11 "      << ooo_cpu[i]->num_cb_nfetch_stall_6_11     << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_12_17 "     << ooo_cpu[i]->num_cb_nfetch_stall_12_17   << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_18_23 "     << ooo_cpu[i]->num_cb_nfetch_stall_18_23    << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_24_29 "     << ooo_cpu[i]->num_cb_nfetch_stall_24_29    << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: num_30_above "  << ooo_cpu[i]->num_cb_nfetch_stall_30_above << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: total "         << ooo_cpu[i]->num_cb_nfetch_stall_total << endl;
+
+        cout << " Number of times speculated "  << (0.0 + ooo_cpu[i]->num_spec) << endl;
+        cout << " Number of times ftq flush during speculation "  << (0.0 + ooo_cpu[i]->num_ftq_flush_during_spec) << endl;
+
 
         // uint64_t tot_addr = ooo_cpu[i]->num_addr_0_39 + ooo_cpu[i]->num_addr_40_79 + ooo_cpu[i]->num_addr_80_119 + ooo_cpu[i]->num_addr_120_159 + ooo_cpu[i]->num_addr_160_199 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_40_792_17 + ooo_cpu[i]->num_addr_40_798_23 + ooo_cpu[i]->num_addr_80_1194_29 + ooo_cpu[i]->num_addr_above;
         // cout << " Percentage addr num_0 " << (0.0 + ooo_cpu[i]->num_addr_0_39) / tot_addr << endl;

@@ -84,17 +84,27 @@ public:
   // What did we prefetcch on wrong path and how many of them were useful
   uint64_t num_instr_fetch_stall = 0;
   uint64_t num_cb_to_PTQ_fetch_stall = 0;
-  uint64_t num_cb_0_5 = 0;
-  uint64_t num_cb_0 = 0;
-  uint64_t num_cb_1 = 0;
-  uint64_t num_cb_2 = 0;
-  uint64_t num_cb_3 = 0;
-  uint64_t num_cb_4 = 0;
+  uint64_t num_cb_1_5 = 0;
   uint64_t num_cb_6_10 = 0;
   uint64_t num_cb_11_15 = 0;
   uint64_t num_cb_16_20 = 0;
   uint64_t num_cb_21_25 = 0;
-  uint64_t num_cb_26_128 = 0;
+  uint64_t num_cb_26_above = 0;
+  uint64_t num_cb_total = 0;
+
+  void collect_cb_added_nstall_stats();
+  uint64_t num_cb_to_PTQ_nfetch_stall = 0;
+  uint64_t num_cb_nfetch_stall_1_5      = 0;
+  uint64_t num_cb_nfetch_stall_6_11     = 0;
+  uint64_t num_cb_nfetch_stall_12_17    = 0;
+  uint64_t num_cb_nfetch_stall_18_23    = 0;
+  uint64_t num_cb_nfetch_stall_24_29    = 0;
+  uint64_t num_cb_nfetch_stall_30_above = 0;
+  uint64_t num_cb_nfetch_stall_total = 0;
+
+  uint64_t num_ftq_flush_during_spec = 0;
+  uint64_t num_spec = 0;
+
 
   uint64_t num_addr_to_PTQ_fetch_stall = 0;
   uint64_t num_addr_0_39_5 = 0;

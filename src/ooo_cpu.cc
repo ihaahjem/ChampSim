@@ -243,7 +243,12 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
             speculate = true;
             uint64_t next_target = (predicted_branch_target == 0) ? arch_instr.ip + 4 : predicted_branch_target;
             current_btb_prediction = std::make_pair(next_target, always_taken);
+            num_spec++;
           }
+        }
+
+        if(ptq_init && speculate){
+          num_ftq_flush_during_spec++;
         }
         
         fetch_stall = 1;
@@ -368,9 +373,12 @@ void O3_CPU::fill_prefetch_queue(uint64_t ip){
       entry.block_address = block_address;
       if(speculate && ptq_init){
         if(!spec_after_fetch_stall){
-          num_cb_to_PTQ_fetch_stall++;
           entry.fetch_stall = true;
         }
+        if(fetch_stall == 0){
+          num_cb_to_PTQ_nfetch_stall++;
+        }
+        num_cb_to_PTQ_fetch_stall++;
         entry.speculated = true;
       }
       PTQ.push_back(entry);
@@ -445,6 +453,8 @@ void O3_CPU::compare_queues(){
 
   //Compare back of FTQ to PTQ
   if(FTQ.back() != PTQ.at(compare_index).block_address){
+    collect_cb_added__stats();
+    collect_cb_added_nstall_stats();
     clear_PTQ();
   }
 }
@@ -579,7 +589,7 @@ void O3_CPU::fetch_instruction()
       clear_PTQ();
     }else{
       num_speculated_fetch_stall = 0;
-      collect_cb_added__stats();
+      // collect_cb_added__stats();
       collect_addr_added__stats();
       spec_after_fetch_stall = true;
     }
@@ -1447,30 +1457,43 @@ void O3_CPU::print_deadlock()
 
 // STATS
 void O3_CPU::collect_cb_added__stats(){
-  if(speculate){
-    if (num_cb_to_PTQ_fetch_stall == 0) {
-        num_cb_0++;
-    } else if (num_cb_to_PTQ_fetch_stall == 1) {
-        num_cb_1++;
-    } else if (num_cb_to_PTQ_fetch_stall == 2) {
-        num_cb_2++;
-    } else if (num_cb_to_PTQ_fetch_stall == 3) {
-        num_cb_3++;
-    } else if (num_cb_to_PTQ_fetch_stall == 4) {
-        num_cb_4++;
-    } else if (num_cb_to_PTQ_fetch_stall < 11) {
+  if(speculate && num_cb_to_PTQ_fetch_stall > 0){
+    if (num_cb_to_PTQ_fetch_stall < 6) {
+        num_cb_1_5++;
+    } else if (num_cb_to_PTQ_fetch_stall < 12) {
         num_cb_6_10++;
-    } else if (num_cb_to_PTQ_fetch_stall < 16) {
+    } else if (num_cb_to_PTQ_fetch_stall < 18) {
         num_cb_11_15++;
-    } else if (num_cb_to_PTQ_fetch_stall < 21) {
+    } else if (num_cb_to_PTQ_fetch_stall < 24) {
         num_cb_16_20++;
-    } else if (num_cb_to_PTQ_fetch_stall < 26) {
+    } else if (num_cb_to_PTQ_fetch_stall < 30) {
         num_cb_21_25++;
     } else {
-        num_cb_26_128++;
+        num_cb_26_above++;
     }
+    num_cb_total += num_cb_to_PTQ_fetch_stall;
     cb_until_time_start = num_cb_to_PTQ_fetch_stall;
     num_cb_to_PTQ_fetch_stall = 0;
+  }
+}
+
+void O3_CPU::collect_cb_added_nstall_stats(){
+  if(speculate && num_cb_to_PTQ_nfetch_stall > 0){
+    if (num_cb_to_PTQ_nfetch_stall < 6) {
+        num_cb_nfetch_stall_1_5++;
+    } else if (num_cb_to_PTQ_nfetch_stall < 12) {
+        num_cb_nfetch_stall_6_11++;
+    } else if (num_cb_to_PTQ_nfetch_stall < 18) {
+        num_cb_nfetch_stall_12_17++;
+    } else if (num_cb_to_PTQ_nfetch_stall < 24) {
+        num_cb_nfetch_stall_18_23++;
+    } else if (num_cb_to_PTQ_nfetch_stall < 30) {
+        num_cb_nfetch_stall_24_29++;
+    } else {
+        num_cb_nfetch_stall_30_above++;
+    }
+    num_cb_nfetch_stall_total += num_cb_to_PTQ_nfetch_stall;
+    num_cb_to_PTQ_nfetch_stall = 0;
   }
 }
 
