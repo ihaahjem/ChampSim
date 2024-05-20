@@ -526,9 +526,8 @@ int main(int argc, char** argv)
 
         cout << " Number of PTQ flushes " << ooo_cpu[i]->num_ptq_flushed << endl;
         cout << " Number of FTQ flushes " << ooo_cpu[i]->num_ftq_flush << endl;
-        cout << " speculations " << ooo_cpu[i]->speculations << " not found in btb " << ooo_cpu[i]->times_next_was_zero << endl;
-        cout << " number of branches " << ooo_cpu[i]->num_branch_found_btb << endl;
-        cout << " number correct path branches " << ooo_cpu[i]->num_correct_path_branch << " number correct path sequential " << ooo_cpu[i]->num_sequential_correct_path << endl;
+
+
         // cout << " Number of FTQ flushes due to conditional " << ooo_cpu[i]->num_ftq_flush_conditional << endl;
         // cout << " Number of FTQ flushes due to call/return " << ooo_cpu[i]->num_ftq_flush_call_return << endl;
         // cout << " Number of FTQ flushes due to other " << ooo_cpu[i]->num_ftq_flush_other << endl;
@@ -546,6 +545,11 @@ int main(int argc, char** argv)
         cout << "Times found in L1I (fdip function): "  <<  ooo_cpu[i]->times_found_in_l1i << endl;
         cout << "Times not found in L1I (fdip function): " <<  ooo_cpu[i]->times_not_found_in_l1i << endl;
         cout << "Max instructions speculated: " <<  ooo_cpu[i]->max_instrs_speculated << endl;
+
+        cout << " ||| What you want out is below ||| " << endl;
+        cout << " speculations " << ooo_cpu[i]->speculations << " sequential (not in btb) " << ooo_cpu[i]->times_next_was_zero << endl;
+        cout << " number of branches total cp" << ooo_cpu[i]->num_branch_found_btb << endl;
+        cout << " number cp branches after bm" << ooo_cpu[i]->num_correct_path_branch << " number correct path sequential " << ooo_cpu[i]->num_sequential_correct_path << endl;
        
 
 
