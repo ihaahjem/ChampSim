@@ -542,7 +542,7 @@ int main(int argc, char** argv)
         cout << " Number of CB added to PTQ during spec: num_16_20 " << (0.0 + ooo_cpu[i]->num_cb_16_20)  << endl;
         cout << " Number of CB added to PTQ during spec: num_21_25 " << (0.0 + ooo_cpu[i]->num_cb_21_25)  << endl;
         cout << " Number of CB added to PTQ during spec: num_26_above " << (0.0 + ooo_cpu[i]->num_cb_26_above) << endl;
-        cout << " Number of CB added to PTQ during spec: total " << (0.0 + ooo_cpu[i]->num_cb_total) << endl;
+        cout << " Number of CB added to PTQ during spec: total " << (0.0 + ooo_cpu[i]->num_cb_total) << " ||||" <<endl;
 
         // Number of cache blocks added to PTQ during speculation on worng path where fetch_stall = 0
         // uint64_t tot_cb = ooo_cpu[i]->num_cb_0 + ooo_cpu[i]->num_cb_1 + ooo_cpu[i]->num_cb_2 + ooo_cpu[i]->num_cb_3 + ooo_cpu[i]->num_cb_4 + ooo_cpu[i]->num_cb_6_10 + ooo_cpu[i]->num_cb_11_15 + ooo_cpu[i]->num_cb_16_20 + ooo_cpu[i]->num_cb_21_25 + ooo_cpu[i]->num_cb_26_above;
@@ -552,10 +552,31 @@ int main(int argc, char** argv)
         cout << " Number of CB added to PTQ during spec !fetch_stall: num_18_23 "     << ooo_cpu[i]->num_cb_nfetch_stall_18_23    << endl;
         cout << " Number of CB added to PTQ during spec !fetch_stall: num_24_29 "     << ooo_cpu[i]->num_cb_nfetch_stall_24_29    << endl;
         cout << " Number of CB added to PTQ during spec !fetch_stall: num_30_above "  << ooo_cpu[i]->num_cb_nfetch_stall_30_above << endl;
-        cout << " Number of CB added to PTQ during spec !fetch_stall: total "         << ooo_cpu[i]->num_cb_nfetch_stall_total << endl;
+        cout << " Number of CB added to PTQ during spec !fetch_stall: total "         << ooo_cpu[i]->num_cb_nfetch_stall_total << " ||||" <<endl;
 
-        cout << " Number of times speculated "  << (0.0 + ooo_cpu[i]->num_spec) << endl;
-        cout << " Number of times ftq flush during speculation "  << (0.0 + ooo_cpu[i]->num_ftq_flush_during_spec) << endl;
+        cout << " Number of times speculated "  << (0.0 + ooo_cpu[i]->num_spec) << " ||||" << endl;
+        cout << " Number of times ftq flush during speculation "  << (0.0 + ooo_cpu[i]->num_ftq_flush_during_spec) << " ||||" <<endl;
+
+
+        // Branch comparisons below: 
+        // Calculate percentages
+double percentage_spec_found_in_btb = percentage_spec_found_in_btb = 100.0 * (1.0 - (0.0 + ooo_cpu[i]->num_spec_not_fount_in_btb) / ooo_cpu[i]->num_speculations);
+
+double percentage_cp_branch_found_btb = percentage_cp_branch_found_btb = 100.0 * (0.0 + ooo_cpu[i]->num_cp_branch_found_btb) / ooo_cpu[i]->finish_sim_instr;
+
+double percentage_cp_after_speculated_branch_found_btb = percentage_cp_after_speculated_branch_found_btb = 100.0 * (0.0 + ooo_cpu[i]->num_cp_after_speculated_branch_found_btb) / ooo_cpu[i]->num_cp_after_speculated;
+
+// Print the results
+std::cout << "Percentage branches found in BTB during speculation: " << percentage_spec_found_in_btb << " % ||||" << std::endl;
+std::cout << "Number of speculations done: " << ooo_cpu[i]->num_speculations << std::endl;
+std::cout << "Number of speculations not found in BTB: " << ooo_cpu[i]->num_spec_not_fount_in_btb << std::endl;
+
+std::cout << "Percentage branches found in BTB on all correct path: " << percentage_cp_branch_found_btb << " % ||||" << std::endl;
+std::cout << "Number of branches found in BTB on correct path: " << ooo_cpu[i]->num_cp_branch_found_btb << std::endl;
+
+std::cout << "Percentage branches found in BTB on correct path after BM resolved: " << percentage_cp_after_speculated_branch_found_btb << " % ||||" << std::endl;
+std::cout << "Number of correct path branches after speculation: " << ooo_cpu[i]->num_cp_after_speculated << std::endl;
+std::cout << "Number of correct path branches found in BTB after speculation: " << ooo_cpu[i]->num_cp_after_speculated_branch_found_btb << std::endl;
 
 
         // uint64_t tot_addr = ooo_cpu[i]->num_addr_0_39 + ooo_cpu[i]->num_addr_40_79 + ooo_cpu[i]->num_addr_80_119 + ooo_cpu[i]->num_addr_120_159 + ooo_cpu[i]->num_addr_160_199 + ooo_cpu[i]->num_addr_6_11 + ooo_cpu[i]->num_addr_40_792_17 + ooo_cpu[i]->num_addr_40_798_23 + ooo_cpu[i]->num_addr_80_1194_29 + ooo_cpu[i]->num_addr_above;

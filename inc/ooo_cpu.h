@@ -103,8 +103,18 @@ public:
   uint64_t num_cb_nfetch_stall_total = 0;
 
   uint64_t num_ftq_flush_during_spec = 0;
-  uint64_t num_spec = 0;
+  uint64_t num_spec = 0; //Number of times speculation is started
 
+  // Percentage branches found in BTB during speculation: 1-num_spec_not_fount_in_btb/num_speculations
+  uint64_t num_speculations = 0; // Number of speculations done
+  uint64_t num_spec_not_fount_in_btb = 0;
+
+  // Percentage branches found in BTB on all correct path: num_cp_branch_found_btb/instructions_ran
+  uint64_t num_cp_branch_found_btb = 0;
+
+  // Percentage branches found in BTB on correct path after bm resolved: num_cp_after_speculated_branch_found_btb/num_cp_after_speculated
+  uint64_t num_cp_after_speculated = 0;
+  uint64_t num_cp_after_speculated_branch_found_btb = 0;
 
   uint64_t num_addr_to_PTQ_fetch_stall = 0;
   uint64_t num_addr_0_39_5 = 0;

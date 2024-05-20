@@ -221,6 +221,13 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   
     std::pair<uint64_t, uint8_t> btb_result = impl_btb_prediction(arch_instr.ip, arch_instr.branch_type);
     uint64_t predicted_branch_target = btb_result.first;
+    if(predicted_branch_target > 0){
+      num_cp_branch_found_btb++;
+
+      if(cb_until_time_start){
+        num_cp_after_speculated_branch_found_btb++;
+      }
+    }
     uint8_t always_taken = btb_result.second;
     uint8_t branch_prediction = impl_predict_branch(arch_instr.ip, predicted_branch_target, always_taken, arch_instr.branch_type);
     if ((branch_prediction == 0) && (always_taken == 0)) {
@@ -312,6 +319,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr)
   uint64_t block_address = (arch_instr.ip >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE;
   // For stats --start--
   if(cb_until_time_start){
+    num_cp_after_speculated++;
     if(block_address != FTQ.back()){
       cb_until_time_start--;
     }
@@ -405,7 +413,10 @@ void O3_CPU::fill_ptq_speculatively(){
     // Speculate the next target in the BTB
     std::pair<uint64_t, uint8_t> next_btb_prediction = impl_btb_prediction(current_btb_prediction.first, current_btb_prediction.second);
 
-    
+    num_speculations++;
+    if(next_btb_prediction.first == 0){
+      num_spec_not_fount_in_btb++;
+    }
 
     uint8_t branch_prediction = impl_predict_branch(current_btb_prediction.first, next_btb_prediction.first, next_btb_prediction.second, current_btb_prediction.second);
     if ((branch_prediction == 0) && (next_btb_prediction.second == 0)) {
